@@ -466,8 +466,7 @@ function RoutesView({ likes, downs, liked, downed, onLike, onDown, onShare, onNf
           <div className="section-heading compact"><div><p className="eyebrow">ROUTE REVIEWS</p><h2>喝过的人说</h2></div><button>写评价</button></div>
           <div className="rating-bars"><b>4.7</b><div><span>氛围 <i><em style={{ width: "94%" }} /></i></span><span>不绕路 <i><em style={{ width: "88%" }} /></i></span><span>酒单匹配 <i><em style={{ width: "91%" }} /></i></span></div></div>
           <article className="review-card"><header><span className="review-avatar mint">S</span><div><b>shhh_</b><small>走过这条路线 · 昨天</small></div><em>4.8</em></header><p>第二站比预想中热闹，但三杯的节奏很好。Moss 的露台收尾很舒服。</p><div><span>#不绕路</span><span>#适合两个人</span></div></article>
-          <article className="review-card bad"><header><span className="review-avatar coral">K</span><div><b>Kino</b><small>到访 2 / 3 站 · 周六</small></div><strong>恶评 · 不计分</strong></header><p>NO. 17 等位比地图显示久，周六不建议照这个时间去。</p><div><span>#客流延迟</span><span>#周末避开</span></div></article>
-          <p className="review-rule">恶评会被醒目标记并接受事实核验，暂不进入路线平均分。</p>
+          <article className="review-card"><header><span className="review-avatar coral">K</span><div><b>Kino</b><small>到访 2 / 3 站 · 周六</small></div><em>3.8</em></header><p>NO. 17 等位比地图显示久，周六不建议照这个时间去。</p><div><span>#客流延迟</span><span>#周末避开</span></div></article>
         </aside>
       </section>
 
