@@ -263,15 +263,18 @@ function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onM
           <div className="road road-one" /><div className="road road-two" /><div className="road road-three" /><div className="road road-four" />
           <div className="district d1">静安寺</div><div className="district d2">新天地</div><div className="district d3">武定路</div>
           <div className="heat heat-one" /><div className="heat heat-two" /><div className="heat heat-three" />
-          <div className="route-line-map"><i /><i /><i /></div>
+          <div className="meteor-guide guide-one" /><div className="meteor-guide guide-two" />
+          <div className="meteor-runner" aria-hidden="true" />
+          <div className="route-live-label"><i /> AI 推荐路线正在变化</div>
           {bars.map((bar) => (
             <button
               key={bar.id}
-              className={`map-pin ${bar.logoClass} ${selectedBar.id === bar.id ? "selected" : ""}`}
+              className={`map-pin ${bar.logoClass} ${bar.id === 2 ? "trending" : ""} ${selectedBar.id === bar.id ? "selected" : ""}`}
               style={{ left: bar.left, top: bar.top }}
               onClick={() => setSelectedBar(bar)}
               aria-label={`${bar.name}，客流 ${bar.crowd}%`}
             >
+              {bar.id === 2 && <span className="trend-rank">趋势 #1 <em>↑24%</em></span>}
               <span className="bar-logo-mark">{bar.logo}</span><b>{bar.crowd}%</b>
             </button>
           ))}
