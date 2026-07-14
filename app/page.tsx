@@ -288,14 +288,16 @@ function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onM
         <div className="city-map">
           <div className="map-grid" />
           <div className="road road-one" /><div className="road road-two" /><div className="road road-three" /><div className="road road-four" />
-          <div className="district d1">静安寺</div><div className="district d2">新天地</div><div className="district d3">武定路</div>
+          <div className="district d1">南京西路</div><div className="district d2">巨鹿路</div><div className="district d3">武定路</div>
+          <div className="map-sign sign-metro"><span>2</span><b>静安寺站</b></div>
+          <div className="map-sign sign-road"><span>→</span><b>延安高架</b></div>
+          <div className="map-landmark landmark-temple"><span>寺</span><b>静安寺</b></div>
           <div className="heat heat-one" /><div className="heat heat-two" /><div className="heat heat-three" />
           <div className={`climate-sky climate-${seasonalMood.theme}`} aria-hidden="true">
             {Array.from({ length: 12 }, (_, index) => <i className={`climate-particle particle-${index + 1}`} key={index} />)}
           </div>
-          <div className="led-guide guide-one" /><div className="led-guide guide-two" />
-          <div className="led-flow flow-one" aria-hidden="true"><i /><i /><i /><i /></div>
-          <div className="led-flow flow-two" aria-hidden="true"><i /><i /><i /></div>
+          <div className="led-track track-one" aria-hidden="true"><i /><i /><i /><i /></div>
+          <div className="led-track track-two" aria-hidden="true"><i /><i /><i /></div>
           <div className="route-live-label"><i /> 推荐值越高 · 光流越快</div>
           {bars.map((bar) => (
             <button
@@ -432,7 +434,12 @@ function RoutesView({ likes, downs, liked, downed, onLike, onDown, onShare, onNf
           </div>
         </div>
         <div className="featured-map" aria-label="路线图">
-          <div className="night-grid" /><div className="route-curve" />
+          <div className="night-grid" />
+          <div className="atlas-road atlas-road-one" /><div className="atlas-road atlas-road-two" /><div className="atlas-road atlas-road-three" />
+          <div className="route-map-label label-jingan"><span>静安寺</span><b>JING&apos;AN</b></div>
+          <div className="route-map-label label-julu"><span>巨鹿路</span><b>JULU RD.</b></div>
+          <div className="route-compass">N <span>↑</span></div>
+          <div className="route-curve" />
           <span className="route-node n1">01<small>Archive Room</small></span>
           <span className="route-node n2">02<small>NO. 17</small></span>
           <span className="route-node n3">03<small>Moss</small></span>
