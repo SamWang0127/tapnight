@@ -1,13 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 type Tab = "home" | "routes" | "menu" | "profile";
 
 const bars = [
-  { id: 1, name: "Archive Room", area: "陕西北路", crowd: 62, wait: "可直接入座", tone: "mint", left: "30%", top: "58%", tags: ["安静", "威士忌", "有猫"] },
-  { id: 2, name: "NO. 17", area: "巨鹿路", crowd: 88, wait: "约等 15 分钟", tone: "coral", left: "59%", top: "36%", tags: ["热闹", "酸感", "新酒单"] },
-  { id: 3, name: "Moss", area: "武定路", crowd: 36, wait: "座位充足", tone: "mint", left: "73%", top: "67%", tags: ["植物感", "金酒", "露台"] },
+  { id: 1, name: "Archive Room", logo: "AR", logoClass: "logo-archive", area: "陕西北路", crowd: 62, wait: "可直接入座", tone: "mint", left: "30%", top: "58%", tags: ["安静", "威士忌", "有猫"] },
+  { id: 2, name: "NO. 17", logo: "17", logoClass: "logo-no17", area: "巨鹿路", crowd: 88, wait: "约等 15 分钟", tone: "coral", left: "59%", top: "36%", tags: ["热闹", "酸感", "新酒单"] },
+  { id: 3, name: "Moss", logo: "M", logoClass: "logo-moss", area: "武定路", crowd: 36, wait: "座位充足", tone: "mint", left: "73%", top: "67%", tags: ["植物感", "金酒", "露台"] },
 ];
 
 const drinks = [
@@ -73,11 +73,19 @@ export default function Home() {
   const [downed, setDowned] = useState(false);
   const [ratedDrinks, setRatedDrinks] = useState<string[]>([]);
   const [activeTags, setActiveTags] = useState(["酸一点", "安静", "有小惊喜"]);
+  const [time, setTime] = useState("--:--");
 
-  const time = useMemo(
-    () => new Intl.DateTimeFormat("zh-CN", { hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date()),
-    [],
-  );
+  useEffect(() => {
+    const updateTime = () => setTime(new Intl.DateTimeFormat("zh-CN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+      timeZone: "Asia/Shanghai",
+    }).format(new Date()));
+    updateTime();
+    const timer = window.setInterval(updateTime, 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   const flash = (message: string) => {
     setToast(message);
@@ -259,12 +267,12 @@ function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onM
           {bars.map((bar) => (
             <button
               key={bar.id}
-              className={`map-pin ${bar.tone} ${selectedBar.id === bar.id ? "selected" : ""}`}
+              className={`map-pin ${bar.logoClass} ${selectedBar.id === bar.id ? "selected" : ""}`}
               style={{ left: bar.left, top: bar.top }}
               onClick={() => setSelectedBar(bar)}
               aria-label={`${bar.name}，客流 ${bar.crowd}%`}
             >
-              <span>{bar.id}</span><b>{bar.crowd}%</b>
+              <span className="bar-logo-mark">{bar.logo}</span><b>{bar.crowd}%</b>
             </button>
           ))}
           <div className="map-legend"><span><i className="legend-mint" />舒适</span><span><i className="legend-coral" />较满</span><b>刚刚更新</b></div>
@@ -291,6 +299,8 @@ function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onM
         <button className="text-button" onClick={onRoutes}>看看大家正在走的路线</button>
       </aside>
 
+      <DailyHub onMenu={onMenu} onRoutes={onRoutes} flash={flash} />
+
       <section className="section-block full-span">
         <div className="section-heading"><div><p className="eyebrow">NOW · 你附近</p><h2>别去等位，去喝酒。</h2></div><button className="text-link" onClick={() => flash("已按实时客流排序")}>按舒适度排序 ↕</button></div>
         <div className="occupancy-grid">
@@ -304,22 +314,68 @@ function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onM
         </div>
       </section>
 
-      <section className="editorial-grid full-span">
-        <article className="bottle-story">
-          <div className="story-number">12H</div>
-          <div className="bottle-shape"><span>VERMOUTH</span></div>
-          <div className="story-copy"><p className="eyebrow">HALF-DAY BOTTLE · 每半天一瓶</p><h2>味美思，不只是配角。</h2><p>从都灵的草本配方，到一杯 Martini 里最安静的那一半。</p><button onClick={() => flash("品牌故事已收藏")}>读 4 分钟的故事 →</button></div>
-        </article>
-        <article className="bartender-story">
-          <div className="portrait-abstract"><span>LY</span></div>
-          <div><p className="eyebrow">BARTENDER NOTES · 已认证</p><h2>林野：我喜欢让路线<br />有一点没计划。</h2><p>来自 Moss 的主理调酒师，分享他的 3 站雨夜路线。</p><div className="story-meta"><span>3 家店</span><span>2.6 km</span><span>89% 推荐</span></div><button onClick={onRoutes}>走他的路线 →</button></div>
-        </article>
-        <article className="drink-pick" onClick={onMenu}>
-          <div className="drink-orbit"><span /></div>
-          <p className="eyebrow">TONIGHT&apos;S GLASS</p><h3>青梅雨</h3><p>酸甜 · 草本 · 低酒精</p><button onClick={onMenu}>查看酒单 →</button>
-        </article>
-      </section>
     </div>
+  );
+}
+
+type DailyFeature = "drink" | "brand" | "bartender" | "newbar";
+
+function DailyHub({ onMenu, onRoutes, flash }: { onMenu: () => void; onRoutes: () => void; flash: (message: string) => void }) {
+  const [feature, setFeature] = useState<DailyFeature>("drink");
+  const tabs: { id: DailyFeature; label: string }[] = [
+    { id: "drink", label: "每日一杯" },
+    { id: "brand", label: "品牌半日" },
+    { id: "bartender", label: "调酒师路线" },
+    { id: "newbar", label: "今晚新店" },
+  ];
+
+  return (
+    <section className="daily-hub full-span" aria-label="8+1 每日内容与品牌推荐">
+      <header className="daily-hub-head">
+        <div><p className="eyebrow">THE DAILY 8+1 · 每天更新</p><h2>今天值得喝的，也值得读。</h2></div>
+        <span><i /> 今日 12:00 已更新</span>
+      </header>
+      <div className="daily-tabs" role="tablist" aria-label="每日内容分类">
+        {tabs.map((tab) => (
+          <button key={tab.id} role="tab" aria-selected={feature === tab.id} className={feature === tab.id ? "active" : ""} onClick={() => setFeature(tab.id)}>{tab.label}</button>
+        ))}
+      </div>
+
+      {feature === "drink" && (
+        <article className="daily-feature daily-pour">
+          <div className="daily-art drink-art"><span className="daily-glass"><i /></span><b>07 / 14</b><small>DAILY POUR</small></div>
+          <div className="daily-copy">
+            <div className="daily-kicker"><span>今日一杯</span><em>Archive Room · 夏季限定</em></div>
+            <h3>青梅雨 <small>PLUM RAIN</small></h3>
+            <p>青梅的酸先到，紫苏和海盐把甜味收住。酒精感很轻，适合今晚的第一杯。</p>
+            <div className="daily-meta"><span>酸甜 74</span><span>草本 38</span><span>低酒精</span><b>4.8</b></div>
+            <div className="daily-actions"><button className="daily-primary" onClick={onMenu}>查看配方与评价 →</button><button onClick={() => flash("「青梅雨」已收藏")}>＋ 收藏今天这杯</button></div>
+          </div>
+          <aside className="promo-note"><b>品牌合作位</b><p>可用于新品首发、品牌故事或门店限定酒推广。</p><small>合作内容不影响用户评分与热度</small></aside>
+        </article>
+      )}
+
+      {feature === "brand" && (
+        <article className="daily-feature daily-brand">
+          <div className="daily-art bottle-art"><span className="mini-bottle">VERMOUTH</span><b>12H</b><small>BRAND STORY</small></div>
+          <div className="daily-copy"><div className="daily-kicker"><span>品牌半日</span><em>每 12 小时换一个故事</em></div><h3>味美思，不只是配角。</h3><p>从都灵的草本配方，到一杯 Martini 里最安静的那一半。用四分钟认识它为什么值得被单独喝。</p><div className="daily-actions"><button className="daily-primary" onClick={() => flash("品牌故事已收藏")}>读完整故事 →</button><button onClick={() => flash("品牌合作资料入口已打开")}>品牌合作</button></div></div>
+        </article>
+      )}
+
+      {feature === "bartender" && (
+        <article className="daily-feature daily-bartender">
+          <div className="daily-art bartender-art"><span>LY</span><b>VERIFIED</b><small>BARTENDER NOTES</small></div>
+          <div className="daily-copy"><div className="daily-kicker"><span>调酒师路线</span><em>林野 · Moss 主理调酒师</em></div><h3>让路线保留一点没计划。</h3><p>三站、2.6 公里，从金酒到烟熏乌梅。他把最喜欢的雨夜走法留在这里。</p><div className="daily-meta"><span>3 家店</span><span>2.6 km</span><span>89% 推荐</span></div><div className="daily-actions"><button className="daily-primary" onClick={onRoutes}>走他的路线 →</button></div></div>
+        </article>
+      )}
+
+      {feature === "newbar" && (
+        <article className="daily-feature daily-newbar">
+          <div className="daily-art newbar-art"><span>M+</span><b>NEW</b><small>OPEN THIS WEEK</small></div>
+          <div className="daily-copy"><div className="daily-kicker"><span>今晚新店</span><em>武定路 · 本周试营业</em></div><h3>Moss Annex</h3><p>只有十二个座位，一张以植物蒸馏为核心的新酒单。今晚 21:30 后仍有空位。</p><div className="daily-meta"><span>植物感</span><span>安静</span><span>试营业</span></div><div className="daily-actions"><button className="daily-primary" onClick={() => flash("已加入今晚候选")}>加入今晚候选 →</button><button onClick={onRoutes}>查看附近路线</button></div></div>
+        </article>
+      )}
+    </section>
   );
 }
 
