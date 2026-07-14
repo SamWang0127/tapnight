@@ -45,6 +45,25 @@ const convenienceStores = [
   { name: "7-ELEVEN", mark: "7", className: "store-seven", left: "88%", top: "63%", walk: "距 Moss 步行 2 min" },
 ];
 
+const COMMUNITY_TAG_THRESHOLD = 24;
+const communityTagSignals: { tag: string; votes: Record<number, number> }[] = [
+  { tag: "安静", votes: { 1: 84, 3: 28, 4: 35, 6: 71 } },
+  { tag: "低酒精", votes: { 1: 27, 2: 31, 3: 35, 6: 59 } },
+  { tag: "适合独饮", votes: { 1: 46, 4: 42, 6: 41 } },
+  { tag: "酸感", votes: { 2: 67, 5: 37 } },
+  { tag: "露台", votes: { 3: 45, 4: 29 } },
+  { tag: "有猫", votes: { 1: 31 } },
+];
+
+const communityFilterOptions = communityTagSignals.map((signal) => ({
+  ...signal,
+  totalMarks: Object.values(signal.votes).filter((votes) => votes >= COMMUNITY_TAG_THRESHOLD).reduce((sum, votes) => sum + votes, 0),
+}));
+
+function getConsensusTags(barId: number) {
+  return communityTagSignals.filter((signal) => (signal.votes[barId] || 0) >= COMMUNITY_TAG_THRESHOLD).map((signal) => signal.tag);
+}
+
 const drinks = [
   {
     name: "青梅雨",
@@ -290,6 +309,23 @@ function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onM
   flash: (message: string) => void;
   seasonalMood: SeasonalMood;
 }) {
+  const [communityFilters, setCommunityFilters] = useState<string[]>([]);
+  const discoverableBars = [...bars, ...nearbyBars];
+  const barMatchesFilters = (bar: typeof bars[number], filters = communityFilters) => !filters.length || filters.some((tag) => getConsensusTags(bar.id).includes(tag));
+  const matchedBars = discoverableBars.filter((bar) => barMatchesFilters(bar));
+  const suggestedRouteBars = (communityFilters.length ? matchedBars : bars).slice(0, 3);
+  const selectedConsensusTags = getConsensusTags(selectedBar.id);
+  const selectedDisplayTags = Array.from(new Set([...selectedConsensusTags, ...selectedBar.tags])).slice(0, 4);
+  const routeTimes = ["20:30", "21:45", "23:00"];
+
+  function toggleCommunityFilter(tag: string) {
+    const nextFilters = communityFilters.includes(tag) ? communityFilters.filter((item) => item !== tag) : [...communityFilters, tag];
+    const nextMatches = discoverableBars.filter((bar) => barMatchesFilters(bar, nextFilters));
+    setCommunityFilters(nextFilters);
+    if (nextFilters.length && !barMatchesFilters(selectedBar, nextFilters) && nextMatches[0]) setSelectedBar(nextMatches[0]);
+    flash(nextFilters.length ? `已按 ${nextFilters.map((item) => `#${item}`).join(" · ")} 重排推荐` : "已显示全部推荐");
+  }
+
   return (
     <div className="home-layout">
       <section className="map-panel" aria-label="上海实时喝酒热力地图">
@@ -328,9 +364,10 @@ function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onM
           {nearbyBars.map((bar) => (
             <button
               key={bar.id}
-              className={`nearby-bar-pin ${selectedBar.id === bar.id ? "selected" : ""}`}
+              className={`nearby-bar-pin ${selectedBar.id === bar.id ? "selected" : ""} ${barMatchesFilters(bar) ? "" : "filtered-out"}`}
               style={{ left: bar.left, top: bar.top }}
               onClick={() => setSelectedBar(bar)}
+              disabled={!barMatchesFilters(bar)}
               aria-label={`附近酒吧 ${bar.name}，客流 ${bar.crowd}%`}
             >
               <span>{bar.logo}</span><b>{bar.name}</b><small>{bar.crowd}%</small>
@@ -339,9 +376,10 @@ function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onM
           {bars.map((bar) => (
             <button
               key={bar.id}
-              className={`map-pin ${bar.logoClass} ${bar.id === 2 ? "trending" : ""} ${selectedBar.id === bar.id ? "selected" : ""}`}
+              className={`map-pin ${bar.logoClass} ${bar.id === 2 ? "trending" : ""} ${selectedBar.id === bar.id ? "selected" : ""} ${barMatchesFilters(bar) ? "" : "filtered-out"}`}
               style={{ left: bar.left, top: bar.top }}
               onClick={() => setSelectedBar(bar)}
+              disabled={!barMatchesFilters(bar)}
               aria-label={`${bar.name}，客流 ${bar.crowd}%`}
             >
               {bar.id === 2 && <span className="trend-rank">趋势 #1 <em>↑24%</em></span>}
@@ -354,7 +392,7 @@ function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onM
           </button>
           <button className="nfc-fab" onClick={onNfc}><span>⌁</span><b>碰一下打卡</b><small>无需打开 App</small></button>
           <article className="map-bar-card">
-            <div><span className={`occupancy-dot ${selectedBar.tone}`} /><p>{selectedBar.area}</p><h3>{selectedBar.name}</h3><div className="inline-tags">{selectedBar.tags.map((tag) => <span key={tag}>{tag}</span>)}</div></div>
+            <div><span className={`occupancy-dot ${selectedBar.tone}`} /><p>{selectedBar.area}</p><h3>{selectedBar.name}</h3><div className="inline-tags">{selectedDisplayTags.map((tag) => <span className={selectedConsensusTags.includes(tag) ? "consensus-auto" : ""} key={tag}>{tag}</span>)}</div><small className="tag-source-note">✓ {selectedConsensusTags.length} 个标签由 ≥{COMMUNITY_TAG_THRESHOLD} 人共识自动加入</small></div>
             <div className="bar-card-stat"><b>{selectedBar.crowd}%</b><span>{selectedBar.wait}</span><button onClick={onRoutes}>放进路线 →</button></div>
           </article>
         </div>
@@ -364,13 +402,20 @@ function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onM
         <p className="eyebrow">8+1 AI · FOR YOU</p>
         <h2>今晚，从清爽<br />走到微醺。</h2>
         <p className="panel-intro">按你的 18 次打卡、此刻客流和新酒单，找到一条不绕路的路线。</p>
-        <div className="mood-chips"><span>酸感</span><span>安静</span><span>有猫</span><button onClick={onPlanner}>＋</button></div>
+        <section className="consensus-filter" aria-label="大家共识标签筛选">
+          <header><div><b>大家共识标签</b><span>COMMUNITY SIGNAL</span></div><small>单店 ≥ {COMMUNITY_TAG_THRESHOLD} 次重合，自动成为酒吧标签</small></header>
+          <div className="consensus-tags">
+            {communityFilterOptions.map((signal) => <button className={communityFilters.includes(signal.tag) ? "active" : ""} aria-pressed={communityFilters.includes(signal.tag)} key={signal.tag} onClick={() => toggleCommunityFilter(signal.tag)}><span>#{signal.tag}</span><small>{signal.totalMarks} 次标记</small></button>)}
+          </div>
+          <footer><span>{communityFilters.length ? `命中 ${matchedBars.length} 家 · 匹配任一已选标签` : "选择标签，地图与今晚路线会同步重排"}</span>{communityFilters.length > 0 && <button onClick={() => { setCommunityFilters([]); flash("已显示全部推荐"); }}>清除</button>}</footer>
+        </section>
         <div className="route-preview">
-          <div className="route-stop"><span>01</span><i /><div><p>20:30 · 陕西北路</p><b>Archive Room</b><small>青梅雨 · 从轻开始</small></div><em>62%</em></div>
-          <div className="route-stop"><span>02</span><i /><div><p>22:00 · 巨鹿路</p><b>NO. 17</b><small>白噪音 · 今季新酒</small></div><em className="warm">88%</em></div>
-          <div className="route-stop"><span>03</span><div><p>23:40 · 武定路</p><b>Moss</b><small>夜航船 · 最后一杯</small></div><em>36%</em></div>
+          {suggestedRouteBars.map((bar, index) => {
+            const matchedTags = getConsensusTags(bar.id).filter((tag) => !communityFilters.length || communityFilters.includes(tag));
+            return <div className="route-stop" key={bar.id}><span>{String(index + 1).padStart(2, "0")}</span><i className={index === suggestedRouteBars.length - 1 ? "route-tail" : ""} /><div><p>{routeTimes[index]} · {bar.area}</p><b>{bar.name}</b><small>{matchedTags.slice(0, 2).map((tag) => `#${tag}`).join(" · ")} · 大家共识</small></div><em className={bar.crowd > 80 ? "warm" : ""}>{bar.crowd}%</em></div>;
+          })}
         </div>
-        <div className="route-summary"><div><b>3</b><span>站</span></div><div><b>3.8</b><span>km</span></div><div><b>92%</b><span>合你口味</span></div></div>
+        <div className="route-summary"><div><b>{suggestedRouteBars.length}</b><span>站</span></div><div><b>{(1.2 + suggestedRouteBars.length * .85).toFixed(1)}</b><span>km</span></div><div><b>{communityFilters.length ? "LIVE" : "92%"}</b><span>{communityFilters.length ? "共识重排" : "合你口味"}</span></div></div>
         <button className="primary-button full" onClick={onPlanner}>按我的感觉重新生成 <span>→</span></button>
         <button className="text-button" onClick={onRoutes}>看看大家正在走的路线</button>
       </aside>
