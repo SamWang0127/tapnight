@@ -39,6 +39,12 @@ const nearbyBars = [
   { id: 6, name: "HUSH", logo: "H", logoClass: "logo-nearby", area: "常熟路", crowd: 39, wait: "座位充足", tone: "mint", left: "86%", top: "46%", tags: ["附近", "安静", "低酒精"] },
 ];
 
+const convenienceStores = [
+  { name: "全家", mark: "全", className: "store-family", left: "23%", top: "45%", walk: "距 Archive Room 步行 3 min" },
+  { name: "罗森", mark: "罗", className: "store-lawson", left: "70%", top: "24%", walk: "距 NO. 17 步行 4 min" },
+  { name: "7-ELEVEN", mark: "7", className: "store-seven", left: "88%", top: "63%", walk: "距 Moss 步行 2 min" },
+];
+
 const drinks = [
   {
     name: "青梅雨",
@@ -308,6 +314,17 @@ function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onM
           <div className="led-track track-one" aria-hidden="true"><i /></div>
           <div className="led-track track-two" aria-hidden="true"><i /></div>
           <div className="route-live-label"><i /> 推荐值越高 · 光流越快</div>
+          {convenienceStores.map((store) => (
+            <button
+              key={store.name}
+              className={`convenience-pin ${store.className}`}
+              style={{ left: store.left, top: store.top }}
+              onClick={() => flash(`${store.name} · 24h · ${store.walk}`)}
+              aria-label={`${store.name}便利店，24小时，${store.walk}`}
+            >
+              <span>{store.mark}</span><b>{store.name}</b><small>24h</small>
+            </button>
+          ))}
           {nearbyBars.map((bar) => (
             <button
               key={bar.id}
@@ -331,7 +348,7 @@ function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onM
               <span className="bar-logo-mark">{bar.logo}</span><b>{bar.crowd}%</b>
             </button>
           ))}
-          <div className="map-legend"><span><i className="legend-mint" />舒适</span><span><i className="legend-coral" />较满</span><span><i className="legend-nearby" />附近</span><b>刚刚更新</b></div>
+          <div className="map-legend"><span><i className="legend-mint" />舒适</span><span><i className="legend-coral" />较满</span><span><i className="legend-nearby" />附近</span><span><i className="legend-store" />便利店</span><b>刚刚更新</b></div>
           <button className="climate-pill" onClick={() => flash(`${seasonalMood.term}气候图层 · ${seasonalMood.climate}`)} aria-label={`当前节气 ${seasonalMood.term}，${seasonalMood.climate}`}>
             <span>{seasonalMood.glyph}</span><b>{seasonalMood.term}</b><small>{seasonalMood.climate}</small>
           </button>
