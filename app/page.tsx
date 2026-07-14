@@ -3,6 +3,29 @@
 import { useEffect, useState } from "react";
 
 type Tab = "home" | "routes" | "menu" | "profile";
+type SeasonTheme = "spring" | "summer" | "autumn" | "winter";
+type SeasonalMood = { theme: SeasonTheme; term: string; climate: string; glyph: string };
+
+const solarTerms = [
+  ["小寒", "大寒", 20], ["立春", "雨水", 19], ["惊蛰", "春分", 20], ["清明", "谷雨", 20],
+  ["立夏", "小满", 21], ["芒种", "夏至", 21], ["小暑", "大暑", 22], ["立秋", "处暑", 23],
+  ["白露", "秋分", 23], ["寒露", "霜降", 23], ["立冬", "小雪", 22], ["大雪", "冬至", 21],
+] as const;
+
+function getSeasonalMood(now = new Date()): SeasonalMood {
+  const parts = new Intl.DateTimeFormat("zh-CN", {
+    month: "numeric", day: "numeric", timeZone: "Asia/Shanghai",
+  }).formatToParts(now);
+  const month = Number(parts.find((part) => part.type === "month")?.value || 1);
+  const day = Number(parts.find((part) => part.type === "day")?.value || 1);
+  const [earlyTerm, lateTerm, changeDay] = solarTerms[month - 1];
+  const theme: SeasonTheme = month >= 3 && month <= 5 ? "spring" : month >= 6 && month <= 8 ? "summer" : month >= 9 && month <= 11 ? "autumn" : "winter";
+  const atmospheres = {
+    spring: { climate: "细雨 · 花信风", glyph: "〆" }, summer: { climate: "湿热 · 晚风", glyph: "≈" },
+    autumn: { climate: "微凉 · 桂香", glyph: "◇" }, winter: { climate: "薄雾 · 干冷", glyph: "✦" },
+  };
+  return { theme, term: day < changeDay ? earlyTerm : lateTerm, ...atmospheres[theme] };
+}
 
 const bars = [
   { id: 1, name: "Archive Room", logo: "AR", logoClass: "logo-archive", area: "陕西北路", crowd: 62, wait: "可直接入座", tone: "mint", left: "30%", top: "58%", tags: ["安静", "威士忌", "有猫"] },
@@ -117,8 +140,10 @@ export default function Home() {
     flash(`已把「${name}」加入今晚`);
   };
 
+  const seasonalMood = getSeasonalMood();
+
   return (
-    <div className="app-shell">
+    <div className={`app-shell season-${seasonalMood.theme}`}>
       <aside className="side-nav" aria-label="主导航">
         <button className="brand-mark" aria-label="8+1 首页" onClick={() => changeTab("home")}>
           <span>8</span><b>+1</b>
@@ -160,6 +185,7 @@ export default function Home() {
             onRoutes={() => changeTab("routes")}
             onMenu={() => changeTab("menu")}
             flash={flash}
+            seasonalMood={seasonalMood}
           />
         )}
         {tab === "routes" && (
@@ -242,7 +268,7 @@ export default function Home() {
   );
 }
 
-function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onMenu, flash }: {
+function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onMenu, flash, seasonalMood }: {
   selectedBar: typeof bars[number];
   setSelectedBar: (bar: typeof bars[number]) => void;
   onNfc: () => void;
@@ -250,6 +276,7 @@ function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onM
   onRoutes: () => void;
   onMenu: () => void;
   flash: (message: string) => void;
+  seasonalMood: SeasonalMood;
 }) {
   return (
     <div className="home-layout">
@@ -263,9 +290,13 @@ function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onM
           <div className="road road-one" /><div className="road road-two" /><div className="road road-three" /><div className="road road-four" />
           <div className="district d1">静安寺</div><div className="district d2">新天地</div><div className="district d3">武定路</div>
           <div className="heat heat-one" /><div className="heat heat-two" /><div className="heat heat-three" />
-          <div className="meteor-guide guide-one" /><div className="meteor-guide guide-two" />
-          <div className="meteor-runner" aria-hidden="true" />
-          <div className="route-live-label"><i /> AI 推荐路线正在变化</div>
+          <div className={`climate-sky climate-${seasonalMood.theme}`} aria-hidden="true">
+            {Array.from({ length: 12 }, (_, index) => <i className={`climate-particle particle-${index + 1}`} key={index} />)}
+          </div>
+          <div className="led-guide guide-one" /><div className="led-guide guide-two" />
+          <div className="led-flow flow-one" aria-hidden="true"><i /><i /><i /><i /></div>
+          <div className="led-flow flow-two" aria-hidden="true"><i /><i /><i /></div>
+          <div className="route-live-label"><i /> 推荐值越高 · 光流越快</div>
           {bars.map((bar) => (
             <button
               key={bar.id}
@@ -279,6 +310,9 @@ function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onM
             </button>
           ))}
           <div className="map-legend"><span><i className="legend-mint" />舒适</span><span><i className="legend-coral" />较满</span><b>刚刚更新</b></div>
+          <button className="climate-pill" onClick={() => flash(`${seasonalMood.term}气候图层 · ${seasonalMood.climate}`)} aria-label={`当前节气 ${seasonalMood.term}，${seasonalMood.climate}`}>
+            <span>{seasonalMood.glyph}</span><b>{seasonalMood.term}</b><small>{seasonalMood.climate}</small>
+          </button>
           <button className="nfc-fab" onClick={onNfc}><span>⌁</span><b>碰一下打卡</b><small>无需打开 App</small></button>
           <article className="map-bar-card">
             <div><span className={`occupancy-dot ${selectedBar.tone}`} /><p>{selectedBar.area}</p><h3>{selectedBar.name}</h3><div className="inline-tags">{selectedBar.tags.map((tag) => <span key={tag}>{tag}</span>)}</div></div>
