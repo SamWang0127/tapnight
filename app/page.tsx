@@ -201,7 +201,7 @@ export default function Home() {
           />
         )}
         {tab === "menu" && <MenuView ratedDrinks={ratedDrinks} onRate={rateDrink} />}
-        {tab === "profile" && <ProfileView onVerify={() => flash("认证申请入口已打开")}/>} 
+        {tab === "profile" && <ProfileView onVerify={() => flash("认证申请入口已打开")} onGreet={(name) => flash(`已向 ${name} 发出一个轻松的招呼`)} />} 
       </main>
 
       <nav className="mobile-nav" aria-label="移动端主导航">
@@ -508,7 +508,14 @@ function MenuView({ ratedDrinks, onRate }: { ratedDrinks: string[]; onRate: (nam
   );
 }
 
-function ProfileView({ onVerify }: { onVerify: () => void }) {
+function ProfileView({ onVerify, onGreet }: { onVerify: () => void; onGreet: (name: string) => void }) {
+  const [greeted, setGreeted] = useState<string[]>([]);
+
+  const greet = (name: string) => {
+    if (!greeted.includes(name)) setGreeted((people) => [...people, name]);
+    onGreet(name);
+  };
+
   return (
     <div className="profile-page">
       <section className="profile-hero">
@@ -542,6 +549,35 @@ function ProfileView({ onVerify }: { onVerify: () => void }) {
           ].map((route) => <div className="history-row" key={route[0]}><time>{route[0]}</time><div><b>{route[1]}</b><small>{route[2]}</small></div><span>{route[3]}</span><button>↗</button></div>)}
         </article>
         <article className="verify-panel"><div className="verify-seal">B+<span>VERIFIED</span></div><div><p className="eyebrow light">FOR BARTENDERS</p><h2>你是调酒师吗？</h2><p>认证后可维护酒单、接受采访、发布署名路线，并获得专业身份标记。</p><button onClick={onVerify}>申请调酒师认证 →</button><small>需要在职证明与门店确认 · 通常 2 个工作日</small></div></article>
+      </section>
+
+      <section className="social-profile-grid">
+        <article className="leaderboard-panel">
+          <div className="section-heading compact"><div><p className="eyebrow">BADGE LEADERBOARD · 上海</p><h2>酒鬼勋章榜</h2></div><span className="board-period">本月</span></div>
+          <div className="responsible-note"><b>18+</b><div><strong>理性饮酒，喝得多不代表排名高。</strong><small>榜单只计算安全打卡、路线多样性和有帮助的评价。</small></div></div>
+          <div className="leaderboard-list">
+            {[
+              ["01", "Yoko", "路线策展人", "18 枚", "Y"], ["02", "Momo", "清醒收尾", "16 枚", "M"], ["03", "Kino", "风味记录者", "14 枚", "K"], ["04", "Sam Wang", "夜行路线家", "11 枚", "SW"], ["05", "A-Yao", "新店雷达", "10 枚", "A"],
+            ].map((person) => <div className={`leaderboard-row ${person[1] === "Sam Wang" ? "current" : ""}`} key={person[1]}><span>{person[0]}</span><i>{person[4]}</i><div><b>{person[1]}</b><small>{person[2]}</small></div><strong>{person[3]}</strong></div>)}
+          </div>
+        </article>
+
+        <article className="encounter-panel">
+          <div className="section-heading compact"><div><p className="eyebrow">SAME BAR · SAME TIME</p><h2>今晚偶遇的酒友</h2></div><span className="encounter-live"><i /> 仅你可见</span></div>
+          <p className="encounter-privacy">仅当双方开启“允许偶遇”，且同店停留重合超过 30 分钟才会出现；不会展示对方完整路线。</p>
+          <div className="encounter-list">
+            {[
+              { name: "Momo", avatar: "M", bar: "Archive Room", time: "21:10–21:42", count: 4 },
+              { name: "林野", avatar: "林", bar: "Moss", time: "上周五 · 23:18", count: 3 },
+              { name: "A-Yao", avatar: "A", bar: "NO. 17", time: "07.05 · 22:04", count: 2 },
+            ].map((person) => {
+              const canGreet = person.count > 3;
+              const isGreeted = greeted.includes(person.name);
+              return <div className="encounter-row" key={person.name}><span>{person.avatar}</span><div><b>{person.name}<em>偶遇 {person.count} 次</em></b><small>{person.bar} · {person.time}</small></div><button disabled={!canGreet} className={isGreeted ? "greeted" : ""} onClick={() => greet(person.name)}>{isGreeted ? "✓ 已打招呼" : canGreet ? "打个招呼" : `再遇 ${4 - person.count} 次`}</button></div>;
+            })}
+          </div>
+          <footer className="encounter-rule"><span>超过 3 次</span>才开放招呼；任何一方关闭偶遇后立即隐藏。</footer>
+        </article>
       </section>
     </div>
   );
