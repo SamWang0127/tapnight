@@ -33,6 +33,12 @@ const bars = [
   { id: 3, name: "Moss", logo: "M", logoClass: "logo-moss", area: "武定路", crowd: 36, wait: "座位充足", tone: "mint", left: "73%", top: "67%", tags: ["植物感", "金酒", "露台"] },
 ];
 
+const nearbyBars = [
+  { id: 4, name: "ECHO", logo: "E", logoClass: "logo-nearby", area: "愚园路", crowd: 48, wait: "可直接入座", tone: "mint", left: "17%", top: "24%", tags: ["附近", "自然酒", "轻音乐"] },
+  { id: 5, name: "FABLE", logo: "F", logoClass: "logo-nearby", area: "富民路", crowd: 71, wait: "少量空位", tone: "coral", left: "43%", top: "45%", tags: ["附近", "经典鸡尾酒", "吧台"] },
+  { id: 6, name: "HUSH", logo: "H", logoClass: "logo-nearby", area: "常熟路", crowd: 39, wait: "座位充足", tone: "mint", left: "86%", top: "46%", tags: ["附近", "安静", "低酒精"] },
+];
+
 const drinks = [
   {
     name: "青梅雨",
@@ -289,16 +295,30 @@ function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onM
           <div className="map-grid" />
           <div className="road road-one" /><div className="road road-two" /><div className="road road-three" /><div className="road road-four" />
           <div className="district d1">南京西路</div><div className="district d2">巨鹿路</div><div className="district d3">武定路</div>
-          <div className="map-sign sign-metro"><span>2</span><b>静安寺站</b></div>
+          <div className="metro-line metro-line-2" /><div className="metro-line metro-line-7" /><div className="metro-line metro-line-12" />
+          <div className="metro-stop station-nanjing"><span><i className="line-2">2</i><i className="line-12">12</i><i className="line-13">13</i></span><b>南京西路</b><small>距 AR 6 min</small></div>
+          <div className="metro-stop station-shaanxi"><span><i className="line-1">1</i><i className="line-10">10</i><i className="line-12">12</i></span><b>陕西南路</b><small>距 17 8 min</small></div>
+          <div className="metro-stop station-changping"><span><i className="line-7">7</i></span><b>昌平路</b><small>距 Moss 5 min</small></div>
           <div className="map-sign sign-road"><span>→</span><b>延安高架</b></div>
           <div className="map-landmark landmark-temple"><span>寺</span><b>静安寺</b></div>
           <div className="heat heat-one" /><div className="heat heat-two" /><div className="heat heat-three" />
           <div className={`climate-sky climate-${seasonalMood.theme}`} aria-hidden="true">
             {Array.from({ length: 12 }, (_, index) => <i className={`climate-particle particle-${index + 1}`} key={index} />)}
           </div>
-          <div className="led-track track-one" aria-hidden="true"><i /><i /><i /><i /></div>
-          <div className="led-track track-two" aria-hidden="true"><i /><i /><i /></div>
+          <div className="led-track track-one" aria-hidden="true"><i /></div>
+          <div className="led-track track-two" aria-hidden="true"><i /></div>
           <div className="route-live-label"><i /> 推荐值越高 · 光流越快</div>
+          {nearbyBars.map((bar) => (
+            <button
+              key={bar.id}
+              className={`nearby-bar-pin ${selectedBar.id === bar.id ? "selected" : ""}`}
+              style={{ left: bar.left, top: bar.top }}
+              onClick={() => setSelectedBar(bar)}
+              aria-label={`附近酒吧 ${bar.name}，客流 ${bar.crowd}%`}
+            >
+              <span>{bar.logo}</span><b>{bar.name}</b><small>{bar.crowd}%</small>
+            </button>
+          ))}
           {bars.map((bar) => (
             <button
               key={bar.id}
@@ -311,7 +331,7 @@ function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onM
               <span className="bar-logo-mark">{bar.logo}</span><b>{bar.crowd}%</b>
             </button>
           ))}
-          <div className="map-legend"><span><i className="legend-mint" />舒适</span><span><i className="legend-coral" />较满</span><b>刚刚更新</b></div>
+          <div className="map-legend"><span><i className="legend-mint" />舒适</span><span><i className="legend-coral" />较满</span><span><i className="legend-nearby" />附近</span><b>刚刚更新</b></div>
           <button className="climate-pill" onClick={() => flash(`${seasonalMood.term}气候图层 · ${seasonalMood.climate}`)} aria-label={`当前节气 ${seasonalMood.term}，${seasonalMood.climate}`}>
             <span>{seasonalMood.glyph}</span><b>{seasonalMood.term}</b><small>{seasonalMood.climate}</small>
           </button>
