@@ -414,6 +414,10 @@ function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onM
           </div>
           <footer><span>{communityFilters.length ? `命中 ${matchedBars.length} 家 · 匹配任一已选标签` : "选择标签，地图与今晚路线会同步重排"}</span>{communityFilters.length > 0 && <button onClick={() => { setCommunityFilters([]); flash("已显示全部推荐"); }}>清除</button>}</footer>
         </section>
+        <button className="discover-newbar-card" onClick={() => flash("Moss Annex 已加入今晚候选路线")}>
+          <span><b>今日新店</b><small>NEW · 武定路试营业</small></span>
+          <strong>Moss Annex</strong><em>21:30 后有位</em><i>＋ 路线</i>
+        </button>
         <div className="route-preview">
           {suggestedRouteBars.map((bar, index) => {
             const matchedTags = getConsensusTags(bar.id).filter((tag) => !communityFilters.length || communityFilters.includes(tag));
@@ -430,7 +434,7 @@ function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onM
   );
 }
 
-type DailyFeature = "drink" | "brand" | "bartender" | "newbar";
+type DailyFeature = "drink" | "brand" | "bartender";
 
 function DailyPage({ onMenu, onRoutes, flash }: { onMenu: () => void; onRoutes: () => void; flash: (message: string) => void }) {
   return <div className="daily-page"><DailyHub onMenu={onMenu} onRoutes={onRoutes} flash={flash} /></div>;
@@ -441,8 +445,7 @@ function DailyHub({ onMenu, onRoutes, onDaily, flash, compact = false }: { onMen
   const tabs: { id: DailyFeature; label: string }[] = [
     { id: "drink", label: "每日一杯" },
     { id: "brand", label: "品牌一日" },
-    { id: "bartender", label: "调酒师说" },
-    { id: "newbar", label: "今晚新店" },
+    { id: "bartender", label: "吧台之后" },
   ];
 
   return (
@@ -477,9 +480,10 @@ function DailyHub({ onMenu, onRoutes, onDaily, flash, compact = false }: { onMen
           <div className="daily-copy">
             <div className="daily-kicker"><span>品牌一日</span><em>日间 / 夜间 · 半天一个板块</em></div>
             <h3>味美思的一天。</h3>
+            <div className="brand-day-rhythm" aria-label="品牌一日昼夜内容节奏"><span><i>☀</i><b>白天</b><small>12:00 日间篇</small></span><span><i>◐</i><b>黑夜</b><small>20:00 夜间篇</small></span></div>
             <div className="brand-day-segments">
-              <button onClick={() => flash("已打开日间篇：先认识这一瓶")}><small>12:00 · 日间篇</small><b>先认识这一瓶。</b><span>都灵味美思 · 草本、微苦、适合单独喝</span></button>
-              <button onClick={() => flash("已打开夜间篇：品牌故事")}><small>20:00 · 夜间篇</small><b>再读一个品牌故事。</b><span>从配方起源，到它在 Martini 里的安静角色</span></button>
+              <button className="day-segment" onClick={() => flash("已打开日间篇：先认识这一瓶")}><small>12:00 · 日间篇</small><b>先认识这一瓶。</b><span>都灵味美思 · 草本、微苦、适合单独喝</span></button>
+              <button className="night-segment" onClick={() => flash("已打开夜间篇：品牌故事")}><small>20:00 · 夜间篇</small><b>再读一个品牌故事。</b><span>从配方起源，到它在 Martini 里的安静角色</span></button>
             </div>
             <div className="daily-actions"><button className="daily-primary" onClick={() => flash("品牌一日已收藏")}>查看今日品牌 →</button><button onClick={() => flash("品牌合作资料入口已打开")}>品牌合作</button></div>
           </div>
@@ -487,22 +491,17 @@ function DailyHub({ onMenu, onRoutes, onDaily, flash, compact = false }: { onMen
       )}
 
       {feature === "bartender" && (
-        <article className="daily-feature daily-bartender bartender-says-feature">
-          <div className="daily-art bartender-art"><span>LY</span><b>INTERVIEW</b><small>BARTENDER VOICE</small></div>
-          <div className="daily-copy">
-            <div className="daily-kicker"><span>调酒师说</span><em>本期访问 · 林野 · Moss 主理调酒师</em></div>
-            <h3>“一条路线，不该把夜晚写死。”</h3>
-            <p>从第一杯的温度，到最后一站为什么不必热闹，他谈了自己理解的喝酒节奏。</p>
-            <div className="bartender-interview-card"><small>Q · 你怎么决定一条路线的结束？</small><blockquote>“留一点意外，也留一点清醒。最后一杯应该让人愿意回家。”</blockquote><span>林野 · 8+1 本期调酒师访问</span></div>
-            <div className="daily-actions"><button className="daily-primary" onClick={() => flash("已打开林野的完整采访")}>读完整采访 →</button><button onClick={onRoutes}>看他推荐的路线</button></div>
+        <article className="daily-feature daily-bartender bartender-after-hours">
+          <div className="daily-art bartender-art"><span>LY</span><b>COLUMN</b><small>BEYOND THE BAR</small></div>
+          <div className="daily-copy bartender-column">
+            <section className="bartender-interview-section">
+              <div className="daily-kicker"><span>吧台之后</span><em>采访专栏 · 林野 · Moss 主理调酒师</em></div>
+              <h3>“一条路线，不该把夜晚写死。”</h3>
+              <div className="bartender-interview-card"><small>Q · 你怎么决定一条路线的结束？</small><blockquote>“留一点意外，也留一点清醒。最后一杯应该让人愿意回家。”</blockquote><span>林野 · 8+1 本期调酒师访问</span><button onClick={() => flash("已打开林野的完整采访")}>读完整采访 →</button></div>
+              <div className="bartender-quote-notes"><span><small>第一杯</small><b>先问今晚想不想醉</b></span><span><small>选店</small><b>用声音和座位决定</b></span><span><small>收尾</small><b>留清醒回家的余地</b></span></div>
+            </section>
+            <section className="bartender-route-pick"><div><small>BARTENDER ROUTE</small><b>林野今晚推荐的三站</b><span>Moss → NO. 17 → Archive Room</span></div><button onClick={onRoutes}>走这条路线 →</button></section>
           </div>
-        </article>
-      )}
-
-      {feature === "newbar" && (
-        <article className="daily-feature daily-newbar">
-          <div className="daily-art newbar-art"><span>M+</span><b>NEW</b><small>OPEN THIS WEEK</small></div>
-          <div className="daily-copy"><div className="daily-kicker"><span>今晚新店</span><em>武定路 · 本周试营业</em></div><h3>Moss Annex</h3><p>只有十二个座位，一张以植物蒸馏为核心的新酒单。今晚 21:30 后仍有空位。</p><div className="daily-meta"><span>植物感</span><span>安静</span><span>试营业</span></div><div className="daily-actions"><button className="daily-primary" onClick={() => flash("已加入今晚候选")}>加入今晚候选 →</button><button onClick={onRoutes}>查看附近路线</button></div></div>
         </article>
       )}
     </section>
