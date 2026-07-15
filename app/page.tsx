@@ -440,8 +440,8 @@ function DailyHub({ onMenu, onRoutes, onDaily, flash, compact = false }: { onMen
   const [feature, setFeature] = useState<DailyFeature>("drink");
   const tabs: { id: DailyFeature; label: string }[] = [
     { id: "drink", label: "每日一杯" },
-    { id: "brand", label: "品牌半日" },
-    { id: "bartender", label: "调酒师路线" },
+    { id: "brand", label: "品牌一日" },
+    { id: "bartender", label: "调酒师说" },
     { id: "newbar", label: "今晚新店" },
   ];
 
@@ -473,15 +473,29 @@ function DailyHub({ onMenu, onRoutes, onDaily, flash, compact = false }: { onMen
 
       {feature === "brand" && (
         <article className="daily-feature daily-brand">
-          <div className="daily-art bottle-art"><span className="mini-bottle">VERMOUTH</span><b>12H</b><small>BRAND STORY</small></div>
-          <div className="daily-copy"><div className="daily-kicker"><span>品牌半日</span><em>每 12 小时换一个故事</em></div><h3>味美思，不只是配角。</h3><p>从都灵的草本配方，到一杯 Martini 里最安静的那一半。用四分钟认识它为什么值得被单独喝。</p><div className="daily-actions"><button className="daily-primary" onClick={() => flash("品牌故事已收藏")}>读完整故事 →</button><button onClick={() => flash("品牌合作资料入口已打开")}>品牌合作</button></div></div>
+          <div className="daily-art bottle-art"><span className="mini-bottle">VERMOUTH</span><b>24H</b><small>BRAND DAY</small></div>
+          <div className="daily-copy">
+            <div className="daily-kicker"><span>品牌一日</span><em>日间 / 夜间 · 半天一个板块</em></div>
+            <h3>味美思的一天。</h3>
+            <div className="brand-day-segments">
+              <button onClick={() => flash("已打开日间篇：先认识这一瓶")}><small>12:00 · 日间篇</small><b>先认识这一瓶。</b><span>都灵味美思 · 草本、微苦、适合单独喝</span></button>
+              <button onClick={() => flash("已打开夜间篇：品牌故事")}><small>20:00 · 夜间篇</small><b>再读一个品牌故事。</b><span>从配方起源，到它在 Martini 里的安静角色</span></button>
+            </div>
+            <div className="daily-actions"><button className="daily-primary" onClick={() => flash("品牌一日已收藏")}>查看今日品牌 →</button><button onClick={() => flash("品牌合作资料入口已打开")}>品牌合作</button></div>
+          </div>
         </article>
       )}
 
       {feature === "bartender" && (
-        <article className="daily-feature daily-bartender">
-          <div className="daily-art bartender-art"><span>LY</span><b>VERIFIED</b><small>BARTENDER NOTES</small></div>
-          <div className="daily-copy"><div className="daily-kicker"><span>调酒师路线</span><em>林野 · Moss 主理调酒师</em></div><h3>让路线保留一点没计划。</h3><p>三站、2.6 公里，从金酒到烟熏乌梅。他把最喜欢的雨夜走法留在这里。</p><div className="daily-meta"><span>3 家店</span><span>2.6 km</span><span>89% 推荐</span></div><div className="daily-actions"><button className="daily-primary" onClick={onRoutes}>走他的路线 →</button></div></div>
+        <article className="daily-feature daily-bartender bartender-says-feature">
+          <div className="daily-art bartender-art"><span>LY</span><b>INTERVIEW</b><small>BARTENDER VOICE</small></div>
+          <div className="daily-copy">
+            <div className="daily-kicker"><span>调酒师说</span><em>本期访问 · 林野 · Moss 主理调酒师</em></div>
+            <h3>“一条路线，不该把夜晚写死。”</h3>
+            <p>从第一杯的温度，到最后一站为什么不必热闹，他谈了自己理解的喝酒节奏。</p>
+            <div className="bartender-interview-card"><small>Q · 你怎么决定一条路线的结束？</small><blockquote>“留一点意外，也留一点清醒。最后一杯应该让人愿意回家。”</blockquote><span>林野 · 8+1 本期调酒师访问</span></div>
+            <div className="daily-actions"><button className="daily-primary" onClick={() => flash("已打开林野的完整采访")}>读完整采访 →</button><button onClick={onRoutes}>看他推荐的路线</button></div>
+          </div>
         </article>
       )}
 
