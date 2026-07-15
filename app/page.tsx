@@ -217,7 +217,6 @@ export default function Home() {
             onPlanner={() => setPlannerOpen(true)}
             onRoutes={() => changeTab("routes")}
             onMenu={() => changeTab("menu")}
-            onDaily={() => changeTab("daily")}
             flash={flash}
             seasonalMood={seasonalMood}
           />
@@ -304,14 +303,13 @@ export default function Home() {
   );
 }
 
-function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onMenu, onDaily, flash, seasonalMood }: {
+function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onMenu, flash, seasonalMood }: {
   selectedBar: typeof bars[number];
   setSelectedBar: (bar: typeof bars[number]) => void;
   onNfc: () => void;
   onPlanner: () => void;
   onRoutes: () => void;
   onMenu: () => void;
-  onDaily: () => void;
   flash: (message: string) => void;
   seasonalMood: SeasonalMood;
 }) {
@@ -404,8 +402,7 @@ function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onM
         </div>
       </section>
 
-      <div className="home-secondary-rail" aria-label="今日内容与今晚推荐">
-      <DailyHub compact onDaily={onDaily} onMenu={onMenu} onRoutes={onRoutes} flash={flash} />
+      <div className="home-secondary-rail" aria-label="标签筛选与今晚推荐">
       <aside className="tonight-panel">
         <p className="eyebrow">8+1 AI · FOR YOU</p>
         <h2>今晚路线，按标签重排。</h2>
