@@ -445,7 +445,7 @@ function DailyHub({ onMenu, onRoutes, onDaily, flash, compact = false }: { onMen
   const tabs: { id: DailyFeature; label: string }[] = [
     { id: "drink", label: "每日一杯" },
     { id: "brand", label: "品牌一日" },
-    { id: "bartender", label: "吧台之后" },
+    { id: "bartender", label: "调酒师怎么说" },
   ];
 
   return (
@@ -477,15 +477,22 @@ function DailyHub({ onMenu, onRoutes, onDaily, flash, compact = false }: { onMen
       {feature === "brand" && (
         <article className="daily-feature daily-brand">
           <div className="daily-art bottle-art"><span className="mini-bottle">VERMOUTH</span><b>24H</b><small>BRAND DAY</small></div>
-          <div className="daily-copy">
-            <div className="daily-kicker"><span>品牌一日</span><em>日间 / 夜间 · 半天一个板块</em></div>
-            <h3>味美思的一天。</h3>
-            <div className="brand-day-rhythm" aria-label="品牌一日昼夜内容节奏"><span><i>☀</i><b>白天</b><small>12:00 日间篇</small></span><span><i>◐</i><b>黑夜</b><small>20:00 夜间篇</small></span></div>
-            <div className="brand-day-segments">
-              <button className="day-segment" onClick={() => flash("已打开日间篇：先认识这一瓶")}><small>12:00 · 日间篇</small><b>先认识这一瓶。</b><span>都灵味美思 · 草本、微苦、适合单独喝</span></button>
-              <button className="night-segment" onClick={() => flash("已打开夜间篇：品牌故事")}><small>20:00 · 夜间篇</small><b>再读一个品牌故事。</b><span>从配方起源，到它在 Martini 里的安静角色</span></button>
+          <div className="daily-copy brand-day-copy">
+            <div className="daily-kicker"><span>品牌一日</span><em>白天 / 黑夜 · 上下两章</em></div>
+            <div className="brand-period-stack" aria-label="品牌一日的日间与夜间内容">
+              <section className="brand-period-block brand-period-day">
+                <header><span>☀</span><div><small>DAY · 12:00</small><b>日间板块</b></div></header>
+                <h3>先认识这一瓶。</h3>
+                <p>都灵味美思 · 草本、微苦、适合单独喝</p>
+                <button onClick={() => flash("已打开日间板块：先认识这一瓶")}>进入日间篇 →</button>
+              </section>
+              <section className="brand-period-block brand-period-night">
+                <header><span>◐</span><div><small>NIGHT · 20:00</small><b>夜间板块</b></div></header>
+                <h3>再读一个品牌故事。</h3>
+                <p>从配方起源，到它在 Martini 里的安静角色</p>
+                <button onClick={() => flash("已打开夜间板块：品牌故事")}>进入夜间篇 →</button>
+              </section>
             </div>
-            <div className="daily-actions"><button className="daily-primary" onClick={() => flash("品牌一日已收藏")}>查看今日品牌 →</button><button onClick={() => flash("品牌合作资料入口已打开")}>品牌合作</button></div>
           </div>
         </article>
       )}
@@ -495,7 +502,7 @@ function DailyHub({ onMenu, onRoutes, onDaily, flash, compact = false }: { onMen
           <div className="daily-art bartender-art"><span>LY</span><b>COLUMN</b><small>BEYOND THE BAR</small></div>
           <div className="daily-copy bartender-column">
             <section className="bartender-interview-section">
-              <div className="daily-kicker"><span>吧台之后</span><em>采访专栏 · 林野 · Moss 主理调酒师</em></div>
+              <div className="daily-kicker"><span>调酒师怎么说</span><em>采访专栏 · 林野 · Moss 主理调酒师</em></div>
               <h3>“一条路线，不该把夜晚写死。”</h3>
               <div className="bartender-interview-card"><small>Q · 你怎么决定一条路线的结束？</small><blockquote>“留一点意外，也留一点清醒。最后一杯应该让人愿意回家。”</blockquote><span>林野 · 8+1 本期调酒师访问</span><button onClick={() => flash("已打开林野的完整采访")}>读完整采访 →</button></div>
               <div className="bartender-quote-notes"><span><small>第一杯</small><b>先问今晚想不想醉</b></span><span><small>选店</small><b>用声音和座位决定</b></span><span><small>收尾</small><b>留清醒回家的余地</b></span></div>
