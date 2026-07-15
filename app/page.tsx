@@ -404,12 +404,14 @@ function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onM
         </div>
       </section>
 
+      <div className="home-secondary-rail" aria-label="今日内容与今晚推荐">
+      <DailyHub compact onDaily={onDaily} onMenu={onMenu} onRoutes={onRoutes} flash={flash} />
       <aside className="tonight-panel">
         <p className="eyebrow">8+1 AI · FOR YOU</p>
-        <h2>今晚，从清爽<br />走到微醺。</h2>
-        <p className="panel-intro">按你的 18 次打卡、此刻客流和新酒单，找到一条不绕路的路线。</p>
+        <h2>今晚路线，按标签重排。</h2>
+        <p className="panel-intro">选择大家反复标记的感觉，地图和路线会一起变化。</p>
         <section className="consensus-filter" aria-label="大家共识标签筛选">
-          <header><div><b>大家共识标签</b><span>COMMUNITY SIGNAL</span></div><small>单店 ≥ {COMMUNITY_TAG_THRESHOLD} 次重合，自动成为酒吧标签</small></header>
+          <header><div><b>共识筛选</b><span>COMMUNITY SIGNAL</span></div><small>≥ {COMMUNITY_TAG_THRESHOLD} 次重合自动成为标签</small></header>
           <div className="consensus-tags">
             {communityFilterOptions.map((signal) => <button className={communityFilters.includes(signal.tag) ? "active" : ""} aria-pressed={communityFilters.includes(signal.tag)} key={signal.tag} onClick={() => toggleCommunityFilter(signal.tag)}><span>#{signal.tag}</span><small>{signal.totalMarks} 次标记</small></button>)}
           </div>
@@ -425,8 +427,7 @@ function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onM
         <button className="primary-button full" onClick={onPlanner}>按我的感觉重新生成 <span>→</span></button>
         <button className="text-button" onClick={onRoutes}>看看大家正在走的路线</button>
       </aside>
-
-      <DailyHub compact onDaily={onDaily} onMenu={onMenu} onRoutes={onRoutes} flash={flash} />
+      </div>
 
     </div>
   );
@@ -633,7 +634,7 @@ function ProfileView({ onVerify }: { onVerify: () => void }) {
           <div className="badge-grid">
             {[
               ["8", "第八杯之后", "累计打卡 80 次"], ["月", "月下常客", "夜间打卡 30 次"], ["酸", "酸感猎人", "评价 20 杯酸感酒"], ["↝", "路线家", "分享路线被推荐 100 次"], ["猫", "遇猫体质", "在 8 家有猫酒吧打卡"], ["?", "下一枚", "再去 2 家新酒吧"],
-            ].map((badge, index) => <div className={`badge-item ${index === 5 ? "locked" : ""}`} key={badge[1]}><span>{badge[0]}</span><b>{badge[1]}</b><small>{badge[2]}</small></div>)}
+            ].slice(0, 4).map((badge) => <div className="badge-item" key={badge[1]}><span>{badge[0]}</span><b>{badge[1]}</b><small>{badge[2]}</small></div>)}
           </div>
         </article>
         <div className="profile-side-stack">
