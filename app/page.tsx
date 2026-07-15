@@ -28,21 +28,21 @@ function getSeasonalMood(now = new Date()): SeasonalMood {
 }
 
 const bars = [
-  { id: 1, name: "Archive Room", logo: "AR", logoClass: "logo-archive", area: "陕西北路", crowd: 62, wait: "可直接入座", tone: "mint", left: "30%", top: "58%", tags: ["安静", "威士忌", "有猫"] },
-  { id: 2, name: "NO. 17", logo: "17", logoClass: "logo-no17", area: "巨鹿路", crowd: 88, wait: "约等 15 分钟", tone: "coral", left: "59%", top: "36%", tags: ["热闹", "酸感", "新酒单"] },
-  { id: 3, name: "Moss", logo: "M", logoClass: "logo-moss", area: "武定路", crowd: 36, wait: "座位充足", tone: "mint", left: "73%", top: "67%", tags: ["植物感", "金酒", "露台"] },
+  { id: 1, name: "Archive Room", logo: "AR", logoClass: "logo-archive", area: "陕西北路", crowd: 62, wait: "可直接入座", tone: "mint", left: "27%", top: "57%", tags: ["安静", "威士忌", "有猫"] },
+  { id: 2, name: "NO. 17", logo: "17", logoClass: "logo-no17", area: "巨鹿路", crowd: 88, wait: "约等 15 分钟", tone: "coral", left: "57%", top: "39%", tags: ["热闹", "酸感", "新酒单"] },
+  { id: 3, name: "Moss", logo: "M", logoClass: "logo-moss", area: "武定路", crowd: 36, wait: "座位充足", tone: "mint", left: "77%", top: "56%", tags: ["植物感", "金酒", "露台"] },
 ];
 
 const nearbyBars = [
-  { id: 4, name: "ECHO", logo: "E", logoClass: "logo-nearby", area: "愚园路", crowd: 48, wait: "可直接入座", tone: "mint", left: "17%", top: "24%", tags: ["附近", "自然酒", "轻音乐"] },
-  { id: 5, name: "FABLE", logo: "F", logoClass: "logo-nearby", area: "富民路", crowd: 71, wait: "少量空位", tone: "coral", left: "43%", top: "45%", tags: ["附近", "经典鸡尾酒", "吧台"] },
-  { id: 6, name: "HUSH", logo: "H", logoClass: "logo-nearby", area: "常熟路", crowd: 39, wait: "座位充足", tone: "mint", left: "86%", top: "46%", tags: ["附近", "安静", "低酒精"] },
+  { id: 4, name: "ECHO", logo: "E", logoClass: "logo-nearby", area: "愚园路", crowd: 48, wait: "可直接入座", tone: "mint", left: "16%", top: "32%", tags: ["附近", "自然酒", "轻音乐"] },
+  { id: 5, name: "FABLE", logo: "F", logoClass: "logo-nearby", area: "富民路", crowd: 71, wait: "少量空位", tone: "coral", left: "42%", top: "50%", tags: ["附近", "经典鸡尾酒", "吧台"] },
+  { id: 6, name: "HUSH", logo: "H", logoClass: "logo-nearby", area: "常熟路", crowd: 39, wait: "座位充足", tone: "mint", left: "89%", top: "42%", tags: ["附近", "安静", "低酒精"] },
 ];
 
 const convenienceStores = [
-  { name: "全家", mark: "全", className: "store-family", left: "23%", top: "45%", walk: "距 Archive Room 步行 3 min" },
-  { name: "罗森", mark: "罗", className: "store-lawson", left: "70%", top: "24%", walk: "距 NO. 17 步行 4 min" },
-  { name: "7-ELEVEN", mark: "7", className: "store-seven", left: "88%", top: "63%", walk: "距 Moss 步行 2 min" },
+  { name: "全家", mark: "全", className: "store-family", left: "10%", top: "55%", walk: "距 Archive Room 步行 3 min" },
+  { name: "罗森", mark: "罗", className: "store-lawson", left: "82%", top: "31%", walk: "距 NO. 17 步行 4 min" },
+  { name: "7-ELEVEN", mark: "7", className: "store-seven", left: "92%", top: "56%", walk: "距 Moss 步行 2 min" },
 ];
 
 const COMMUNITY_TAG_THRESHOLD = 24;
@@ -341,7 +341,6 @@ function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onM
           <div className="map-grid" />
           <div className="road road-one" /><div className="road road-two" /><div className="road road-three" /><div className="road road-four" />
           <div className="district d1">南京西路</div><div className="district d2">巨鹿路</div><div className="district d3">武定路</div>
-          <div className="metro-line metro-line-2" /><div className="metro-line metro-line-7" /><div className="metro-line metro-line-12" />
           <div className="metro-stop station-nanjing"><span><i className="line-2">2</i><i className="line-12">12</i><i className="line-13">13</i></span><b>南京西路</b><small>距 AR 6 min</small></div>
           <div className="metro-stop station-shaanxi"><span><i className="line-1">1</i><i className="line-10">10</i><i className="line-12">12</i></span><b>陕西南路</b><small>距 17 8 min</small></div>
           <div className="metro-stop station-changping"><span><i className="line-7">7</i></span><b>昌平路</b><small>距 Moss 5 min</small></div>
