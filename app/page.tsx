@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type Tab = "home" | "daily" | "routes" | "menu" | "community" | "profile";
 type SeasonTheme = "spring" | "summer" | "autumn" | "winter";
@@ -314,6 +314,7 @@ function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onM
   seasonalMood: SeasonalMood;
 }) {
   const [communityFilters, setCommunityFilters] = useState<string[]>([]);
+  const tagDrag = useRef({ pointerId: -1, startX: 0, startScroll: 0, moved: false });
   const discoverableBars = [...bars, ...nearbyBars];
   const barMatchesFilters = (bar: typeof bars[number], filters = communityFilters) => !filters.length || filters.some((tag) => getConsensusTags(bar.id).includes(tag));
   const matchedBars = discoverableBars.filter((bar) => barMatchesFilters(bar));
@@ -323,11 +324,38 @@ function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onM
   const routeTimes = ["20:30", "21:45", "23:00"];
 
   function toggleCommunityFilter(tag: string) {
+    if (tagDrag.current.moved) {
+      tagDrag.current.moved = false;
+      return;
+    }
     const nextFilters = communityFilters.includes(tag) ? communityFilters.filter((item) => item !== tag) : [...communityFilters, tag];
     const nextMatches = discoverableBars.filter((bar) => barMatchesFilters(bar, nextFilters));
     setCommunityFilters(nextFilters);
     if (nextFilters.length && !barMatchesFilters(selectedBar, nextFilters) && nextMatches[0]) setSelectedBar(nextMatches[0]);
     flash(nextFilters.length ? `已按 ${nextFilters.map((item) => `#${item}`).join(" · ")} 重排推荐` : "已显示全部推荐");
+  }
+
+  function beginTagDrag(event: React.PointerEvent<HTMLDivElement>) {
+    tagDrag.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startScroll: event.currentTarget.scrollLeft,
+      moved: false,
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+
+  function moveTagDrag(event: React.PointerEvent<HTMLDivElement>) {
+    if (tagDrag.current.pointerId !== event.pointerId) return;
+    const delta = event.clientX - tagDrag.current.startX;
+    if (Math.abs(delta) > 4) tagDrag.current.moved = true;
+    event.currentTarget.scrollLeft = tagDrag.current.startScroll - delta;
+  }
+
+  function endTagDrag(event: React.PointerEvent<HTMLDivElement>) {
+    if (tagDrag.current.pointerId !== event.pointerId) return;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+    tagDrag.current.pointerId = -1;
   }
 
   return (
@@ -408,7 +436,13 @@ function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onM
         <p className="panel-intro">选择大家反复标记的感觉，地图和路线会一起变化。</p>
         <section className="consensus-filter" aria-label="大家共识标签筛选">
           <header><div><b>共识筛选</b><span>COMMUNITY SIGNAL</span></div><small>≥ {COMMUNITY_TAG_THRESHOLD} 次重合自动成为标签</small></header>
-          <div className="consensus-tags">
+          <div
+            className="consensus-tags"
+            onPointerDown={beginTagDrag}
+            onPointerMove={moveTagDrag}
+            onPointerUp={endTagDrag}
+            onPointerCancel={endTagDrag}
+          >
             {communityFilterOptions.map((signal) => <button className={communityFilters.includes(signal.tag) ? "active" : ""} aria-pressed={communityFilters.includes(signal.tag)} key={signal.tag} onClick={() => toggleCommunityFilter(signal.tag)}><span>#{signal.tag}</span><small>{signal.totalMarks} 次标记</small></button>)}
           </div>
           <footer><span>{communityFilters.length ? `命中 ${matchedBars.length} 家 · 匹配任一已选标签` : "选择标签，地图与今晚路线会同步重排"}</span>{communityFilters.length > 0 && <button onClick={() => { setCommunityFilters([]); flash("已显示全部推荐"); }}>清除</button>}</footer>
@@ -462,7 +496,7 @@ function DailyHub({ onMenu, onRoutes, onDaily, flash, compact = false }: { onMen
       {feature === "drink" && (
         <article className="daily-feature daily-pour">
           <div className="daily-art drink-art"><span className="daily-glass"><i /></span><b>07 / 14</b><small>DAILY POUR</small></div>
-          <div className="daily-copy">
+          <div className="daily-copy daily-pour-copy">
             <div className="daily-kicker"><span>今日一杯</span><em>Archive Room · 夏季限定</em></div>
             <h3>青梅雨 <small>PLUM RAIN</small></h3>
             <p>青梅的酸先到，紫苏和海盐把甜味收住。酒精感很轻，适合今晚的第一杯。</p>
