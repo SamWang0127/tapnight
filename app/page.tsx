@@ -576,18 +576,20 @@ function MenuView({ ratedDrinks, onRate }: { ratedDrinks: string[]; onRate: (nam
   const visible = filter === "全部" ? drinks : drinks.filter((drink) => drink.tags.includes(filter));
   return (
     <div className="menu-page">
-      <section className="menu-hero">
-        <div><p className="eyebrow">SEASONAL MENUS · 2026 SUMMER</p><h2>把“好喝”拆成<br />你说得出的感觉。</h2><p>每杯酒都有配方、风味与来自喝过的人的标签。今天喝了什么，直接记下来。</p></div>
-        <div className="menu-count"><b>168</b><span>杯季节限定酒</span><small>来自上海 42 家酒吧</small><button>＋ 创建自定义标签</button></div>
-      </section>
-      <div className="filter-row"><span>按标签筛选</span>{["全部", "酸甜", "清爽", "烟熏", "花香", "低酒精"].map((item) => <button key={item} className={filter === item ? "active" : ""} onClick={() => setFilter(item)}>{item}</button>)}<button className="more-filter">更多筛选 ＋</button></div>
-      <section className="drink-grid">
-        {visible.map((drink, index) => (
-          <article className="drink-card" key={drink.name}>
-            <div className="drink-card-art" style={{ "--drink-color": drink.color } as React.CSSProperties}><span className="glass"><i /></span><b>0{index + 1}</b></div>
-            <div className="drink-card-copy"><p>{drink.bar}</p><div className="drink-title"><h2>{drink.name}<small>{drink.english}</small></h2><b>¥{drink.price}</b></div><p className="formula">{drink.formula}</p><div className="inline-tags">{drink.tags.map((tag) => <span key={tag}>{tag}</span>)}</div><div className="taste-profile"><label>酸度 <i><em style={{ width: `${drink.taste[0]}%` }} /></i></label><label>香气 <i><em style={{ width: `${drink.taste[1]}%` }} /></i></label><label>酒感 <i><em style={{ width: `${drink.taste[2]}%` }} /></i></label></div><footer><span><b>4.{8 - index}</b> · {126 - index * 17} 人喝过</span><button className={ratedDrinks.includes(drink.name) ? "done" : ""} onClick={() => onRate(drink.name)}>{ratedDrinks.includes(drink.name) ? "✓ 已喝过" : "＋ 今天喝过"}</button></footer></div>
-          </article>
-        ))}
+      <section className="menu-frame" aria-label="完整季节酒单">
+        <section className="menu-hero">
+          <div><p className="eyebrow">SEASONAL MENUS · 2026 SUMMER</p><h2>把“好喝”拆成<br />你说得出的感觉。</h2><p>每杯酒都有配方、风味与来自喝过的人的标签。今天喝了什么，直接记下来。</p></div>
+          <div className="menu-count"><b>168</b><span>杯季节限定酒</span><small>来自上海 42 家酒吧</small><button>＋ 创建自定义标签</button></div>
+        </section>
+        <div className="filter-row"><span>按标签筛选</span>{["全部", "酸甜", "清爽", "烟熏", "花香", "低酒精"].map((item) => <button key={item} className={filter === item ? "active" : ""} onClick={() => setFilter(item)}>{item}</button>)}<button className="more-filter">更多筛选 ＋</button></div>
+        <section className="drink-grid">
+          {visible.map((drink, index) => (
+            <article className="drink-card" key={drink.name}>
+              <div className="drink-card-art" style={{ "--drink-color": drink.color } as React.CSSProperties}><span className="drink-photo-frame"><span className="glass"><i /></span></span><b>0{index + 1}</b></div>
+              <div className="drink-card-copy"><p>{drink.bar}</p><div className="drink-title"><h2>{drink.name}<small>{drink.english}</small></h2><b>¥{drink.price}</b></div><p className="formula">{drink.formula}</p><div className="inline-tags">{drink.tags.map((tag) => <span key={tag}>{tag}</span>)}</div><div className="taste-profile"><label>酸度 <i><em style={{ width: `${drink.taste[0]}%` }} /></i></label><label>香气 <i><em style={{ width: `${drink.taste[1]}%` }} /></i></label><label>酒感 <i><em style={{ width: `${drink.taste[2]}%` }} /></i></label></div><footer><span><b>4.{8 - index}</b> · {126 - index * 17} 人喝过</span><button className={ratedDrinks.includes(drink.name) ? "done" : ""} onClick={() => onRate(drink.name)}>{ratedDrinks.includes(drink.name) ? "✓ 已喝过" : "＋ 今天喝过"}</button></footer></div>
+            </article>
+          ))}
+        </section>
       </section>
     </div>
   );
