@@ -537,7 +537,7 @@ function RoutesView({ likes, downs, liked, downed, onLike, onDown, onShare, onNf
           ].map((stop, index) => (
             <div className="itinerary-stop" key={stop[0]}>
               <span className="stop-no">{stop[0]}</span><div className="stop-line"><i />{index < 2 && <b />}</div>
-              <div className="stop-info"><p>{stop[1]} · {index ? `${index * 1.4 + 1.2} km` : "起点"}</p><h3>{stop[2]} <span>{stop[5]}</span></h3><small><b>{stop[3]}</b> · {stop[4]}</small></div>
+              <div className="stop-info"><p>{stop[1]} · {index ? `${(index * 1.4 + 1.2).toFixed(1)} km` : "起点"}</p><h3>{stop[2]} <span>{stop[5]}</span></h3><small><b>{stop[3]}</b> · {stop[4]}</small></div>
               <button>查看 →</button>
             </div>
           ))}
