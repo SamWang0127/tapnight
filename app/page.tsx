@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-type Tab = "home" | "routes" | "menu" | "profile";
+type Tab = "home" | "daily" | "routes" | "menu" | "community" | "profile";
 type SeasonTheme = "spring" | "summer" | "autumn" | "winter";
 type SeasonalMood = { theme: SeasonTheme; term: string; climate: string; glyph: string };
 
@@ -109,8 +109,10 @@ const drinks = [
 
 const navItems: { id: Tab; label: string; glyph: string }[] = [
   { id: "home", label: "发现", glyph: "⌁" },
+  { id: "daily", label: "今日", glyph: "✦" },
   { id: "routes", label: "路线", glyph: "↝" },
   { id: "menu", label: "酒单", glyph: "◒" },
+  { id: "community", label: "酒友", glyph: "◎" },
   { id: "profile", label: "我的", glyph: "○" },
 ];
 
@@ -199,7 +201,7 @@ export default function Home() {
         <header className="topbar">
           <div>
             <p className="location-line"><span className="live-dot" />SHANGHAI · JING&apos;AN · {time}</p>
-            <h1>{tab === "home" ? "晚上好，Sam。" : tab === "routes" ? "路线，是夜晚的手写体。" : tab === "menu" ? "从一杯开始认识它。" : "你的喝酒档案。"}</h1>
+            <h1>{tab === "home" ? "晚上好，Sam。" : tab === "daily" ? "今天，先认识一杯。" : tab === "routes" ? "路线，是夜晚的手写体。" : tab === "menu" ? "从一杯开始认识它。" : tab === "community" ? "同一间店，也许见过。" : "你的喝酒档案。"}</h1>
           </div>
           <div className="top-actions">
             <button className="status-pill" onClick={() => flash("城市热力数据刚刚更新")}><span className="live-dot" /> 2,847 人正在喝</button>
@@ -215,10 +217,12 @@ export default function Home() {
             onPlanner={() => setPlannerOpen(true)}
             onRoutes={() => changeTab("routes")}
             onMenu={() => changeTab("menu")}
+            onDaily={() => changeTab("daily")}
             flash={flash}
             seasonalMood={seasonalMood}
           />
         )}
+        {tab === "daily" && <DailyPage onMenu={() => changeTab("menu")} onRoutes={() => changeTab("routes")} flash={flash} />}
         {tab === "routes" && (
           <RoutesView
             likes={routeLikes}
@@ -232,7 +236,8 @@ export default function Home() {
           />
         )}
         {tab === "menu" && <MenuView ratedDrinks={ratedDrinks} onRate={rateDrink} />}
-        {tab === "profile" && <ProfileView onVerify={() => flash("认证申请入口已打开")} onGreet={(name) => flash(`已向 ${name} 发出一个轻松的招呼`)} />} 
+        {tab === "community" && <CommunityPage onGreet={(name) => flash(`已向 ${name} 发出一个轻松的招呼`)} />}
+        {tab === "profile" && <ProfileView onVerify={() => flash("认证申请入口已打开")} />}
       </main>
 
       <nav className="mobile-nav" aria-label="移动端主导航">
@@ -299,13 +304,14 @@ export default function Home() {
   );
 }
 
-function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onMenu, flash, seasonalMood }: {
+function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onMenu, onDaily, flash, seasonalMood }: {
   selectedBar: typeof bars[number];
   setSelectedBar: (bar: typeof bars[number]) => void;
   onNfc: () => void;
   onPlanner: () => void;
   onRoutes: () => void;
   onMenu: () => void;
+  onDaily: () => void;
   flash: (message: string) => void;
   seasonalMood: SeasonalMood;
 }) {
@@ -420,20 +426,7 @@ function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onM
         <button className="text-button" onClick={onRoutes}>看看大家正在走的路线</button>
       </aside>
 
-      <DailyHub onMenu={onMenu} onRoutes={onRoutes} flash={flash} />
-
-      <section className="section-block full-span">
-        <div className="section-heading"><div><p className="eyebrow">NOW · 你附近</p><h2>别去等位，去喝酒。</h2></div><button className="text-link" onClick={() => flash("已按实时客流排序")}>按舒适度排序 ↕</button></div>
-        <div className="occupancy-grid">
-          {bars.map((bar) => (
-            <button key={bar.id} className="occupancy-card" onClick={() => { setSelectedBar(bar); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
-              <div className="card-index">0{bar.id}</div>
-              <div className="occupancy-main"><p>{bar.area} · 1.{bar.id + 1} km</p><h3>{bar.name}</h3><div className="inline-tags">{bar.tags.slice(0, 2).map((tag) => <span key={tag}>{tag}</span>)}</div></div>
-              <div className="occupancy-level"><b>{bar.crowd}%</b><span>{bar.wait}</span><div className="capacity-track"><i style={{ width: `${bar.crowd}%` }} className={bar.tone} /></div></div>
-            </button>
-          ))}
-        </div>
-      </section>
+      <DailyHub compact onDaily={onDaily} onMenu={onMenu} onRoutes={onRoutes} flash={flash} />
 
     </div>
   );
@@ -441,7 +434,11 @@ function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onM
 
 type DailyFeature = "drink" | "brand" | "bartender" | "newbar";
 
-function DailyHub({ onMenu, onRoutes, flash }: { onMenu: () => void; onRoutes: () => void; flash: (message: string) => void }) {
+function DailyPage({ onMenu, onRoutes, flash }: { onMenu: () => void; onRoutes: () => void; flash: (message: string) => void }) {
+  return <div className="daily-page"><DailyHub onMenu={onMenu} onRoutes={onRoutes} flash={flash} /></div>;
+}
+
+function DailyHub({ onMenu, onRoutes, onDaily, flash, compact = false }: { onMenu: () => void; onRoutes: () => void; onDaily?: () => void; flash: (message: string) => void; compact?: boolean }) {
   const [feature, setFeature] = useState<DailyFeature>("drink");
   const tabs: { id: DailyFeature; label: string }[] = [
     { id: "drink", label: "每日一杯" },
@@ -451,16 +448,16 @@ function DailyHub({ onMenu, onRoutes, flash }: { onMenu: () => void; onRoutes: (
   ];
 
   return (
-    <section className="daily-hub full-span" aria-label="8+1 每日内容与品牌推荐">
+    <section className={`daily-hub full-span ${compact ? "daily-compact" : ""}`} aria-label="8+1 每日内容与品牌推荐">
       <header className="daily-hub-head">
         <div><p className="eyebrow">THE DAILY 8+1 · 每天更新</p><h2>今天值得喝的，也值得读。</h2></div>
-        <span><i /> 今日 12:00 已更新</span>
+        {compact ? <button className="daily-open" onClick={onDaily}>查看今日全部 →</button> : <span><i /> 今日 12:00 已更新</span>}
       </header>
-      <div className="daily-tabs" role="tablist" aria-label="每日内容分类">
+      {!compact && <div className="daily-tabs" role="tablist" aria-label="每日内容分类">
         {tabs.map((tab) => (
           <button key={tab.id} role="tab" aria-selected={feature === tab.id} className={feature === tab.id ? "active" : ""} onClick={() => setFeature(tab.id)}>{tab.label}</button>
         ))}
-      </div>
+      </div>}
 
       {feature === "drink" && (
         <article className="daily-feature daily-pour">
@@ -539,7 +536,7 @@ function RoutesView({ likes, downs, liked, downed, onLike, onDown, onShare, onNf
           ].map((stop, index) => (
             <div className="itinerary-stop" key={stop[0]}>
               <span className="stop-no">{stop[0]}</span><div className="stop-line"><i />{index < 2 && <b />}</div>
-              <div className="stop-info"><p>{stop[1]} · {index ? `${index * 1.4 + 1.2} km` : "起点"}</p><h3>{stop[2]} <span>{stop[5]}</span></h3><b>{stop[3]}</b><small>{stop[4]}</small></div>
+              <div className="stop-info"><p>{stop[1]} · {index ? `${index * 1.4 + 1.2} km` : "起点"}</p><h3>{stop[2]} <span>{stop[5]}</span></h3><small><b>{stop[3]}</b> · {stop[4]}</small></div>
               <button>查看 →</button>
             </div>
           ))}
@@ -549,18 +546,8 @@ function RoutesView({ likes, downs, liked, downed, onLike, onDown, onShare, onNf
           <div className="rating-bars"><b>4.7</b><div><span>氛围 <i><em style={{ width: "94%" }} /></i></span><span>不绕路 <i><em style={{ width: "88%" }} /></i></span><span>酒单匹配 <i><em style={{ width: "91%" }} /></i></span></div></div>
           <article className="review-card"><header><span className="review-avatar mint">S</span><div><b>shhh_</b><small>走过这条路线 · 昨天</small></div><em>4.8</em></header><p>第二站比预想中热闹，但三杯的节奏很好。Moss 的露台收尾很舒服。</p><div><span>#不绕路</span><span>#适合两个人</span></div></article>
           <article className="review-card"><header><span className="review-avatar coral">K</span><div><b>Kino</b><small>到访 2 / 3 站 · 周六</small></div><em>3.8</em></header><p>NO. 17 等位比地图显示久，周六不建议照这个时间去。</p><div><span>#客流延迟</span><span>#周末避开</span></div></article>
+          <div className="inline-route-picks"><header><b>本周另外两条</b><button>全部路线 →</button></header><button><span>雨天不淋湿路线</span><small>2.1 km · ↑ 1,204</small></button><button><span>三杯金酒散步</span><small>3.4 km · ↑ 986</small></button></div>
         </aside>
-      </section>
-
-      <section className="section-block">
-        <div className="section-heading"><div><p className="eyebrow">COMMUNITY PICKS</p><h2>这周，大家还在走。</h2></div><button className="text-link">全部路线 →</button></div>
-        <div className="community-routes">
-          {[
-            ["雨天不淋湿路线", "淮海路", "2.1 km", "1,204", "安静 · 酒店吧 · 室内连廊"],
-            ["三杯金酒散步", "武定路", "3.4 km", "986", "金酒 · 植物感 · 露台"],
-            ["调酒师下班以后", "长乐路", "5.2 km", "821", "深夜 · 行家推荐 · 隐藏店"],
-          ].map((route, index) => <article key={route[0]} className="community-card"><span>0{index + 1}</span><div className="mini-route-visual"><i /><i /><i /></div><p>{route[1]} · {route[2]}</p><h3>{route[0]}</h3><small>{route[4]}</small><footer><b>↑ {route[3]} 推荐</b><button>查看 →</button></footer></article>)}
-        </div>
       </section>
     </div>
   );
@@ -573,7 +560,7 @@ function MenuView({ ratedDrinks, onRate }: { ratedDrinks: string[]; onRate: (nam
     <div className="menu-page">
       <section className="menu-hero">
         <div><p className="eyebrow">SEASONAL MENUS · 2026 SUMMER</p><h2>把“好喝”拆成<br />你说得出的感觉。</h2><p>每杯酒都有配方、风味与来自喝过的人的标签。今天喝了什么，直接记下来。</p></div>
-        <div className="menu-count"><b>168</b><span>杯季节限定酒</span><small>来自上海 42 家酒吧</small></div>
+        <div className="menu-count"><b>168</b><span>杯季节限定酒</span><small>来自上海 42 家酒吧</small><button>＋ 创建自定义标签</button></div>
       </section>
       <div className="filter-row"><span>按标签筛选</span>{["全部", "酸甜", "清爽", "烟熏", "花香", "低酒精"].map((item) => <button key={item} className={filter === item ? "active" : ""} onClick={() => setFilter(item)}>{item}</button>)}<button className="more-filter">更多筛选 ＋</button></div>
       <section className="drink-grid">
@@ -584,12 +571,11 @@ function MenuView({ ratedDrinks, onRate }: { ratedDrinks: string[]; onRate: (nam
           </article>
         ))}
       </section>
-      <section className="custom-tag-callout"><div><p className="eyebrow">YOUR TASTE LANGUAGE</p><h2>“像雨后的石头。”<br />标签也可以只属于你。</h2></div><p>自定义标签会先保存在你的私人风味档案中；被更多人使用后，会成为大家都能筛选的公共标签。</p><button>创建我的第一个标签 →</button></section>
     </div>
   );
 }
 
-function ProfileView({ onVerify, onGreet }: { onVerify: () => void; onGreet: (name: string) => void }) {
+function CommunityPage({ onGreet }: { onGreet: (name: string) => void }) {
   const [greeted, setGreeted] = useState<string[]>([]);
 
   const greet = (name: string) => {
@@ -598,54 +584,22 @@ function ProfileView({ onVerify, onGreet }: { onVerify: () => void; onGreet: (na
   };
 
   return (
-    <div className="profile-page">
-      <section className="profile-hero">
-        <div className="profile-avatar">SW<span>LEVEL 07</span></div>
-        <div className="profile-name"><p className="eyebrow">MEMBER SINCE 2024</p><h2>Sam Wang</h2><p>@after_eight · 上海</p><div className="profile-tags"><span>酸感猎人</span><span>夜行路线家</span><span>威士忌学徒</span></div></div>
-        <div className="profile-stats"><div><b>86</b><span>打卡</span></div><div><b>34</b><span>酒吧</span></div><div><b>19</b><span>路线</span></div><div><b>128</b><span>杯酒</span></div></div>
-      </section>
-
-      <section className="profile-grid">
-        <article className="badge-panel">
-          <div className="section-heading compact"><div><p className="eyebrow">BADGES · 11 / 24</p><h2>你的酒鬼勋章</h2></div><button>查看全部 →</button></div>
-          <div className="badge-grid">
-            {[
-              ["8", "第八杯之后", "累计打卡 80 次"], ["月", "月下常客", "夜间打卡 30 次"], ["酸", "酸感猎人", "评价 20 杯酸感酒"], ["↝", "路线家", "分享路线被推荐 100 次"], ["猫", "遇猫体质", "在 8 家有猫酒吧打卡"], ["?", "下一枚", "再去 2 家新酒吧"],
-            ].map((badge, index) => <div className={`badge-item ${index === 5 ? "locked" : ""}`} key={badge[1]}><span>{badge[0]}</span><b>{badge[1]}</b><small>{badge[2]}</small></div>)}
-          </div>
-        </article>
-        <article className="frequent-panel">
-          <div className="section-heading compact"><div><p className="eyebrow">FREQUENT BARS</p><h2>总会再去的地方</h2></div></div>
-          {[
-            ["01", "Archive Room", "18 次", "酸甜 · 安静 · 低酒精"], ["02", "Moss", "12 次", "金酒 · 植物感 · 露台"], ["03", "NO. 17", "9 次", "清爽 · 新酒单 · 热闹"],
-          ].map((bar) => <div className="frequent-row" key={bar[1]}><span>{bar[0]}</span><div><b>{bar[1]}</b><small>{bar[3]}</small></div><strong>{bar[2]}</strong><button>→</button></div>)}
-        </article>
-      </section>
-
-      <section className="profile-grid lower">
-        <article className="history-panel">
-          <div className="section-heading compact"><div><p className="eyebrow">MY ROUTES</p><h2>走过的夜晚</h2></div><button>管理路线 →</button></div>
-          {[
-            ["07.12", "从清爽到烟熏", "3 站 · 4.2 km", "↑ 326"], ["06.28", "雨天不淋湿路线", "3 站 · 2.1 km", "↑ 204"], ["06.07", "两个人的低酒精散步", "4 站 · 3.6 km", "私密"],
-          ].map((route) => <div className="history-row" key={route[0]}><time>{route[0]}</time><div><b>{route[1]}</b><small>{route[2]}</small></div><span>{route[3]}</span><button>↗</button></div>)}
-        </article>
-        <article className="verify-panel"><div className="verify-seal">B+<span>VERIFIED</span></div><div><p className="eyebrow light">FOR BARTENDERS</p><h2>你是调酒师吗？</h2><p>认证后可维护酒单、接受采访、发布署名路线，并获得专业身份标记。</p><button onClick={onVerify}>申请调酒师认证 →</button><small>需要在职证明与门店确认 · 通常 2 个工作日</small></div></article>
-      </section>
-
+    <div className="community-page">
+      <section className="community-intro"><div><p className="eyebrow">8+1 SOCIAL · SHANGHAI</p><h2>见过几次，<br />才算有点熟。</h2></div><p>榜单鼓励安全、多样和有帮助的记录；偶遇只在双方授权后出现。</p></section>
       <section className="social-profile-grid">
         <article className="leaderboard-panel">
           <div className="section-heading compact"><div><p className="eyebrow">BADGE LEADERBOARD · 上海</p><h2>酒鬼勋章榜</h2></div><span className="board-period">本月</span></div>
-          <div className="responsible-note"><b>18+</b><div><strong>理性饮酒，喝得多不代表排名高。</strong><small>榜单只计算安全打卡、路线多样性和有帮助的评价。</small></div></div>
+          <div className="responsible-note"><b>18+</b><div><strong>理性饮酒，喝得多不代表排名高。</strong><small>只计算安全打卡、路线多样性和有帮助的评价。</small></div></div>
           <div className="leaderboard-list">
             {[
-              ["01", "Yoko", "路线策展人", "18 枚", "Y"], ["02", "Momo", "清醒收尾", "16 枚", "M"], ["03", "Kino", "风味记录者", "14 枚", "K"], ["04", "Sam Wang", "夜行路线家", "11 枚", "SW"], ["05", "A-Yao", "新店雷达", "10 枚", "A"],
+              ["01", "Yoko", "路线策展人", "18 枚", "Y"], ["02", "Momo", "清醒收尾", "16 枚", "M"], ["03", "Kino", "风味记录者", "14 枚", "K"], ["04", "Sam Wang", "夜行路线家", "11 枚", "SW"],
             ].map((person) => <div className={`leaderboard-row ${person[1] === "Sam Wang" ? "current" : ""}`} key={person[1]}><span>{person[0]}</span><i>{person[4]}</i><div><b>{person[1]}</b><small>{person[2]}</small></div><strong>{person[3]}</strong></div>)}
           </div>
         </article>
 
         <article className="encounter-panel">
           <div className="section-heading compact"><div><p className="eyebrow">SAME BAR · SAME TIME</p><h2>今晚偶遇的酒友</h2></div><span className="encounter-live"><i /> 仅你可见</span></div>
-          <p className="encounter-privacy">仅当双方开启“允许偶遇”，且同店停留重合超过 30 分钟才会出现；不会展示对方完整路线。</p>
+          <p className="encounter-privacy">双方授权 · 同店重合 30 分钟以上 · 偶遇 4 次后可打招呼</p>
           <div className="encounter-list">
             {[
               { name: "Momo", avatar: "M", bar: "Archive Room", time: "21:10–21:42", count: 4 },
@@ -657,9 +611,47 @@ function ProfileView({ onVerify, onGreet }: { onVerify: () => void; onGreet: (na
               return <div className="encounter-row" key={person.name}><span>{person.avatar}</span><div><b>{person.name}<em>偶遇 {person.count} 次</em></b><small>{person.bar} · {person.time}</small></div><button disabled={!canGreet} className={isGreeted ? "greeted" : ""} onClick={() => greet(person.name)}>{isGreeted ? "✓ 已打招呼" : canGreet ? "打个招呼" : `再遇 ${4 - person.count} 次`}</button></div>;
             })}
           </div>
-          <footer className="encounter-rule"><span>超过 3 次</span>才开放招呼；任何一方关闭偶遇后立即隐藏。</footer>
         </article>
       </section>
+    </div>
+  );
+}
+
+function ProfileView({ onVerify }: { onVerify: () => void }) {
+
+  return (
+    <div className="profile-page">
+      <section className="profile-hero">
+        <div className="profile-avatar">SW<span>LEVEL 07</span></div>
+        <div className="profile-name"><p className="eyebrow">MEMBER SINCE 2024</p><h2>Sam Wang</h2><p>@after_eight · 上海</p><div className="profile-tags"><span>酸感猎人</span><span>夜行路线家</span><span>威士忌学徒</span></div><button className="profile-verify-chip" onClick={onVerify}>B+ 调酒师认证 →</button></div>
+        <div className="profile-stats"><div><b>86</b><span>打卡</span></div><div><b>34</b><span>酒吧</span></div><div><b>19</b><span>路线</span></div><div><b>128</b><span>杯酒</span></div></div>
+      </section>
+
+      <section className="profile-grid profile-core-grid">
+        <article className="badge-panel">
+          <div className="section-heading compact"><div><p className="eyebrow">BADGES · 11 / 24</p><h2>你的酒鬼勋章</h2></div><button>查看全部 →</button></div>
+          <div className="badge-grid">
+            {[
+              ["8", "第八杯之后", "累计打卡 80 次"], ["月", "月下常客", "夜间打卡 30 次"], ["酸", "酸感猎人", "评价 20 杯酸感酒"], ["↝", "路线家", "分享路线被推荐 100 次"], ["猫", "遇猫体质", "在 8 家有猫酒吧打卡"], ["?", "下一枚", "再去 2 家新酒吧"],
+            ].map((badge, index) => <div className={`badge-item ${index === 5 ? "locked" : ""}`} key={badge[1]}><span>{badge[0]}</span><b>{badge[1]}</b><small>{badge[2]}</small></div>)}
+          </div>
+        </article>
+        <div className="profile-side-stack">
+          <article className="frequent-panel">
+            <div className="section-heading compact"><div><p className="eyebrow">FREQUENT BARS</p><h2>常去 · 记录</h2></div></div>
+            {[
+              ["01", "Archive Room", "18 次", "酸甜 · 安静"], ["02", "Moss", "12 次", "金酒 · 露台"], ["03", "NO. 17", "9 次", "清爽 · 热闹"],
+            ].map((bar) => <div className="frequent-row" key={bar[1]}><span>{bar[0]}</span><div><b>{bar[1]}</b><small>{bar[3]}</small></div><strong>{bar[2]}</strong><button>→</button></div>)}
+          </article>
+          <article className="history-panel">
+            <div className="section-heading compact"><div><p className="eyebrow">MY ROUTES</p><h2>最近路线</h2></div><button>全部 →</button></div>
+            {[
+              ["07.12", "从清爽到烟熏", "3 站", "↑ 326"], ["06.28", "雨天不淋湿路线", "3 站", "↑ 204"],
+            ].map((route) => <div className="history-row" key={route[0]}><time>{route[0]}</time><div><b>{route[1]}</b><small>{route[2]}</small></div><span>{route[3]}</span><button>↗</button></div>)}
+          </article>
+        </div>
+      </section>
+
     </div>
   );
 }
