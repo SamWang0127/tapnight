@@ -8,12 +8,13 @@ type SeasonalMood = { theme: SeasonTheme; term: string; climate: string; glyph: 
 type DrinkPersonality = { type: string; name: string };
 type MapPoint = { label: string; left: string; top: string };
 type MapSegment = { left: string; top: string; width: string; rotate: number };
+type TravelMode = { glyph: string; label: string; kind: "walk" | "metro" | "drive" | "ride"; recommended?: boolean; segments?: MapSegment[]; via?: MapPoint };
 type BarTravelGuide = {
   route: string;
   origin: MapPoint;
   next: MapPoint;
   segments: MapSegment[];
-  modes: { glyph: string; label: string; recommended?: boolean }[];
+  modes: TravelMode[];
 };
 
 const solarTerms = [
@@ -54,37 +55,37 @@ const barTravelGuides: Record<number, BarTravelGuide> = {
     route: "静安寺 → Archive Room → FABLE",
     origin: { label: "静安寺", left: "10%", top: "43%" }, next: { label: "FABLE", left: "42%", top: "50%" },
     segments: [{ left: "11%", top: "46%", width: "20%", rotate: 37 }, { left: "27%", top: "57%", width: "17%", rotate: -24 }],
-    modes: [{ glyph: "步", label: "步行 9 min", recommended: true }, { glyph: "地", label: "2号线 + 步行 14 min" }],
+    modes: [{ glyph: "步", label: "步行 9 min", kind: "walk", recommended: true }, { glyph: "地", label: "2号线 + 步行 14 min", kind: "metro", via: { label: "南京西路 · 2号线", left: "8%", top: "71%" }, segments: [{ left: "10%", top: "44%", width: "28%", rotate: 94 }, { left: "8%", top: "71%", width: "25%", rotate: -37 }, { left: "27%", top: "57%", width: "17%", rotate: -24 }] }],
   },
   2: {
     route: "陕西南路 → NO. 17 → Archive Room",
     origin: { label: "陕西南路", left: "52%", top: "22%" }, next: { label: "Archive", left: "27%", top: "57%" },
     segments: [{ left: "53%", top: "25%", width: "15%", rotate: 77 }, { left: "57%", top: "39%", width: "34%", rotate: 151 }],
-    modes: [{ glyph: "步", label: "步行 8 min", recommended: true }, { glyph: "车", label: "打车 6 min" }],
+    modes: [{ glyph: "步", label: "步行 8 min", kind: "walk", recommended: true }, { glyph: "车", label: "打车 6 min", kind: "drive", via: { label: "延安高架", left: "77%", top: "29%" }, segments: [{ left: "53%", top: "23%", width: "25%", rotate: 14 }, { left: "77%", top: "29%", width: "24%", rotate: 91 }, { left: "77%", top: "52%", width: "25%", rotate: -146 }, { left: "57%", top: "39%", width: "34%", rotate: 151 }] }],
   },
   3: {
     route: "昌平路 → Moss → Moss Annex",
     origin: { label: "昌平路", left: "31%", top: "27%" }, next: { label: "ANNEX", left: "90%", top: "69%" },
     segments: [{ left: "33%", top: "29%", width: "51%", rotate: 30 }, { left: "77%", top: "56%", width: "18%", rotate: 46 }],
-    modes: [{ glyph: "步", label: "步行 5 min", recommended: true }, { glyph: "骑", label: "骑行 8 min" }],
+    modes: [{ glyph: "步", label: "步行 5 min", kind: "walk", recommended: true }, { glyph: "骑", label: "骑行 8 min", kind: "ride", via: { label: "武定路骑行道", left: "58%", top: "24%" }, segments: [{ left: "32%", top: "27%", width: "28%", rotate: -7 }, { left: "59%", top: "24%", width: "31%", rotate: 27 }, { left: "86%", top: "38%", width: "22%", rotate: 111 }, { left: "77%", top: "56%", width: "18%", rotate: 46 }] }],
   },
   4: {
     route: "静安寺 → ECHO → Archive Room",
     origin: { label: "静安寺", left: "10%", top: "43%" }, next: { label: "Archive", left: "27%", top: "57%" },
     segments: [{ left: "11%", top: "42%", width: "18%", rotate: -39 }, { left: "16%", top: "32%", width: "21%", rotate: 53 }],
-    modes: [{ glyph: "骑", label: "骑行 10 min", recommended: true }, { glyph: "地", label: "2号线 + 步行 13 min" }],
+    modes: [{ glyph: "骑", label: "骑行 10 min", kind: "ride", recommended: true }, { glyph: "地", label: "2号线 + 步行 13 min", kind: "metro", via: { label: "南京西路 · 2号线", left: "8%", top: "71%" }, segments: [{ left: "10%", top: "43%", width: "29%", rotate: 94 }, { left: "8%", top: "71%", width: "42%", rotate: -79 }, { left: "16%", top: "32%", width: "21%", rotate: 53 }] }],
   },
   5: {
     route: "陕西南路 → FABLE → NO. 17",
     origin: { label: "陕西南路", left: "52%", top: "22%" }, next: { label: "NO. 17", left: "57%", top: "39%" },
     segments: [{ left: "53%", top: "24%", width: "25%", rotate: 119 }, { left: "42%", top: "50%", width: "19%", rotate: -47 }],
-    modes: [{ glyph: "步", label: "步行 7 min", recommended: true }, { glyph: "骑", label: "骑行 6 min" }],
+    modes: [{ glyph: "步", label: "步行 7 min", kind: "walk", recommended: true }, { glyph: "骑", label: "骑行 6 min", kind: "ride", via: { label: "巨鹿路骑行道", left: "70%", top: "61%" }, segments: [{ left: "53%", top: "23%", width: "22%", rotate: 87 }, { left: "53%", top: "45%", width: "22%", rotate: 46 }, { left: "70%", top: "61%", width: "34%", rotate: -69 }, { left: "42%", top: "50%", width: "19%", rotate: -47 }] }],
   },
   6: {
     route: "常熟路 → HUSH → Moss",
     origin: { label: "常熟路", left: "72%", top: "23%" }, next: { label: "Moss", left: "77%", top: "56%" },
     segments: [{ left: "73%", top: "25%", width: "23%", rotate: 41 }, { left: "89%", top: "42%", width: "22%", rotate: 142 }],
-    modes: [{ glyph: "步", label: "步行 6 min", recommended: true }, { glyph: "地", label: "7号线 + 步行 12 min" }],
+    modes: [{ glyph: "步", label: "步行 6 min", kind: "walk", recommended: true }, { glyph: "地", label: "7号线 + 步行 12 min", kind: "metro", via: { label: "昌平路 · 7号线", left: "31%", top: "27%" }, segments: [{ left: "72%", top: "23%", width: "42%", rotate: 174 }, { left: "31%", top: "27%", width: "62%", rotate: 18 }, { left: "89%", top: "42%", width: "22%", rotate: 142 }] }],
   },
 };
 
@@ -385,6 +386,8 @@ function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onM
   const selectedConsensusTags = getConsensusTags(selectedBar.id);
   const selectedDisplayTags = Array.from(new Set([...selectedConsensusTags, ...selectedBar.tags])).slice(0, 4);
   const selectedTravel = barTravelGuides[selectedBar.id];
+  const activeMode = selectedTravel.modes.find((mode) => mode.label === activeTravelMode) || selectedTravel.modes[0];
+  const activeNavigationSegments = activeMode.segments || selectedTravel.segments;
   const routeTimes = ["20:30", "21:45", "23:00"];
 
   useEffect(() => {
@@ -462,14 +465,15 @@ function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onM
           <div className="led-track track-two" aria-hidden="true"><i /></div>
           <div className="route-live-label"><i /> 推荐值越高 · 光流越快</div>
           {navigationMode && (
-            <div className="map-navigation" aria-label={`${selectedTravel.route}，${activeTravelMode}，指路中`}>
-              {selectedTravel.segments.map((segment, index) => (
-                <i className="navigation-segment" style={{ left: segment.left, top: segment.top, width: segment.width, transform: `rotate(${segment.rotate}deg)` }} key={`${selectedBar.id}-${index}`}><b /></i>
+            <div className={`map-navigation mode-${activeMode.kind}`} aria-label={`${selectedTravel.route}，${activeMode.label}，指路中`}>
+              {activeNavigationSegments.map((segment, index) => (
+                <i className="navigation-segment" style={{ left: segment.left, top: segment.top, width: segment.width, transform: `rotate(${segment.rotate}deg)` }} key={`${selectedBar.id}-${activeMode.label}-${index}`}><b /></i>
               ))}
               <span className="navigation-point navigation-origin" style={{ left: selectedTravel.origin.left, top: selectedTravel.origin.top }}><i>起</i><b>{selectedTravel.origin.label}</b></span>
+              {activeMode.via && <span className="navigation-point navigation-via" style={{ left: activeMode.via.left, top: activeMode.via.top }}><i>{activeMode.glyph}</i><b>途经 · {activeMode.via.label}</b></span>}
               <span className="navigation-point navigation-destination" style={{ left: selectedBar.left, top: selectedBar.top }}><i>{selectedBar.logo}</i><b>当前 · {selectedBar.name}</b></span>
               <span className="navigation-point navigation-next" style={{ left: selectedTravel.next.left, top: selectedTravel.next.top }}><i>→</i><b>下一站 · {selectedTravel.next.label}</b></span>
-              <span className="navigation-status"><i /> 指路中 · {activeTravelMode}</span>
+              <span className="navigation-status"><i /> {activeMode.kind === "walk" ? "街区步行" : activeMode.kind === "metro" ? "地铁接驳" : activeMode.kind === "drive" ? "驾车路线" : "骑行路线"} · {activeMode.label}</span>
             </div>
           )}
           {convenienceStores.map((store) => (
