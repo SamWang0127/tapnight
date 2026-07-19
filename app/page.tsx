@@ -6,6 +6,15 @@ type Tab = "home" | "daily" | "routes" | "menu" | "community" | "profile";
 type SeasonTheme = "spring" | "summer" | "autumn" | "winter";
 type SeasonalMood = { theme: SeasonTheme; term: string; climate: string; glyph: string };
 type DrinkPersonality = { type: string; name: string };
+type MapPoint = { label: string; left: string; top: string };
+type MapSegment = { left: string; top: string; width: string; rotate: number };
+type BarTravelGuide = {
+  route: string;
+  origin: MapPoint;
+  next: MapPoint;
+  segments: MapSegment[];
+  modes: { glyph: string; label: string; recommended?: boolean }[];
+};
 
 const solarTerms = [
   ["小寒", "大寒", 20], ["立春", "雨水", 19], ["惊蛰", "春分", 20], ["清明", "谷雨", 20],
@@ -40,13 +49,43 @@ const nearbyBars = [
   { id: 6, name: "HUSH", logo: "H", logoClass: "logo-nearby", area: "常熟路", crowd: 39, wait: "座位充足", tone: "mint", left: "89%", top: "42%", tags: ["附近", "安静", "低酒精"] },
 ];
 
-const barTravelGuides: Record<number, { route: string; modes: { glyph: string; label: string; recommended?: boolean }[] }> = {
-  1: { route: "静安寺 → Archive Room → FABLE", modes: [{ glyph: "步", label: "步行 9 min", recommended: true }, { glyph: "地", label: "2号线 + 步行 14 min" }] },
-  2: { route: "陕西南路 → NO. 17 → Archive Room", modes: [{ glyph: "步", label: "步行 8 min", recommended: true }, { glyph: "车", label: "打车 6 min" }] },
-  3: { route: "昌平路 → Moss → Moss Annex", modes: [{ glyph: "步", label: "步行 5 min", recommended: true }, { glyph: "骑", label: "骑行 8 min" }] },
-  4: { route: "静安寺 → ECHO → Archive Room", modes: [{ glyph: "骑", label: "骑行 10 min", recommended: true }, { glyph: "地", label: "2号线 + 步行 13 min" }] },
-  5: { route: "陕西南路 → FABLE → NO. 17", modes: [{ glyph: "步", label: "步行 7 min", recommended: true }, { glyph: "骑", label: "骑行 6 min" }] },
-  6: { route: "常熟路 → HUSH → Moss", modes: [{ glyph: "步", label: "步行 6 min", recommended: true }, { glyph: "地", label: "7号线 + 步行 12 min" }] },
+const barTravelGuides: Record<number, BarTravelGuide> = {
+  1: {
+    route: "静安寺 → Archive Room → FABLE",
+    origin: { label: "静安寺", left: "10%", top: "43%" }, next: { label: "FABLE", left: "42%", top: "50%" },
+    segments: [{ left: "11%", top: "46%", width: "20%", rotate: 37 }, { left: "27%", top: "57%", width: "17%", rotate: -24 }],
+    modes: [{ glyph: "步", label: "步行 9 min", recommended: true }, { glyph: "地", label: "2号线 + 步行 14 min" }],
+  },
+  2: {
+    route: "陕西南路 → NO. 17 → Archive Room",
+    origin: { label: "陕西南路", left: "52%", top: "22%" }, next: { label: "Archive", left: "27%", top: "57%" },
+    segments: [{ left: "53%", top: "25%", width: "15%", rotate: 77 }, { left: "57%", top: "39%", width: "34%", rotate: 151 }],
+    modes: [{ glyph: "步", label: "步行 8 min", recommended: true }, { glyph: "车", label: "打车 6 min" }],
+  },
+  3: {
+    route: "昌平路 → Moss → Moss Annex",
+    origin: { label: "昌平路", left: "31%", top: "27%" }, next: { label: "ANNEX", left: "90%", top: "69%" },
+    segments: [{ left: "33%", top: "29%", width: "51%", rotate: 30 }, { left: "77%", top: "56%", width: "18%", rotate: 46 }],
+    modes: [{ glyph: "步", label: "步行 5 min", recommended: true }, { glyph: "骑", label: "骑行 8 min" }],
+  },
+  4: {
+    route: "静安寺 → ECHO → Archive Room",
+    origin: { label: "静安寺", left: "10%", top: "43%" }, next: { label: "Archive", left: "27%", top: "57%" },
+    segments: [{ left: "11%", top: "42%", width: "18%", rotate: -39 }, { left: "16%", top: "32%", width: "21%", rotate: 53 }],
+    modes: [{ glyph: "骑", label: "骑行 10 min", recommended: true }, { glyph: "地", label: "2号线 + 步行 13 min" }],
+  },
+  5: {
+    route: "陕西南路 → FABLE → NO. 17",
+    origin: { label: "陕西南路", left: "52%", top: "22%" }, next: { label: "NO. 17", left: "57%", top: "39%" },
+    segments: [{ left: "53%", top: "24%", width: "25%", rotate: 119 }, { left: "42%", top: "50%", width: "19%", rotate: -47 }],
+    modes: [{ glyph: "步", label: "步行 7 min", recommended: true }, { glyph: "骑", label: "骑行 6 min" }],
+  },
+  6: {
+    route: "常熟路 → HUSH → Moss",
+    origin: { label: "常熟路", left: "72%", top: "23%" }, next: { label: "Moss", left: "77%", top: "56%" },
+    segments: [{ left: "73%", top: "25%", width: "23%", rotate: 41 }, { left: "89%", top: "42%", width: "22%", rotate: 142 }],
+    modes: [{ glyph: "步", label: "步行 6 min", recommended: true }, { glyph: "地", label: "7号线 + 步行 12 min" }],
+  },
 };
 
 const convenienceStores = [
@@ -74,48 +113,48 @@ function getConsensusTags(barId: number) {
   return communityTagSignals.filter((signal) => (signal.votes[barId] || 0) >= COMMUNITY_TAG_THRESHOLD).map((signal) => signal.tag);
 }
 
-const drinks = [
-  {
-    name: "青梅雨",
-    english: "PLUM RAIN",
-    bar: "Archive Room · 2026 夏季酒单",
-    formula: "青梅浸泡酒 / 干味美思 / 紫苏 / 海盐",
-    price: 108,
-    color: "#bff4d3",
-    tags: ["酸甜", "草本", "低酒精"],
-    taste: [74, 38, 22],
-  },
-  {
-    name: "白噪音",
-    english: "WHITE NOISE",
-    bar: "NO. 17 · 2026 夏季酒单",
-    formula: "椰子朗姆 / 澄清菠萝 / 白胡椒 / 苏打",
-    price: 118,
-    color: "#ebe9df",
-    tags: ["清爽", "气泡", "热带"],
-    taste: [48, 66, 18],
-  },
-  {
-    name: "夜航船",
-    english: "NIGHT FERRY",
-    bar: "Moss · 2026 夏季酒单",
-    formula: "波本 / 烟熏乌梅 / 黑糖 / 苦精",
-    price: 128,
-    color: "#c99d79",
-    tags: ["烟熏", "厚重", "威士忌"],
-    taste: [18, 35, 84],
-  },
-  {
-    name: "晚风信箱",
-    english: "NIGHT MAIL",
-    bar: "Archive Room · 2026 夏季酒单",
-    formula: "金酒 / 桂花 / 白葡萄 / 茉莉冷萃",
-    price: 112,
-    color: "#f4da8a",
-    tags: ["花香", "干爽", "茶感"],
-    taste: [32, 72, 30],
-  },
-];
+type DrinkSpec = [name: string, english: string, formula: string, price: number, color: string, tags: string[], taste: number[]];
+
+const drinkMenuSpecs: Record<string, DrinkSpec[]> = {
+  "Archive Room": [
+    ["青梅雨", "PLUM RAIN", "青梅浸泡酒 / 干味美思 / 紫苏 / 海盐", 108, "#bff4d3", ["酸甜", "草本", "低酒精"], [74, 38, 22]],
+    ["晚风信箱", "NIGHT MAIL", "金酒 / 桂花 / 白葡萄 / 茉莉冷萃", 112, "#f4da8a", ["花香", "干爽", "茶感"], [32, 72, 30]],
+    ["旧书页", "OLD PAGES", "雪莉桶威士忌 / 无花果 / 可可 / 盐", 128, "#b89071", ["厚重", "坚果", "威士忌"], [18, 46, 82]],
+    ["潮汐玻璃", "TIDAL GLASS", "伏特加 / 海盐葡萄 / 柠檬马鞭草 / 苏打", 116, "#cfe7e3", ["清爽", "气泡", "草本"], [56, 64, 26]],
+  ],
+  "NO. 17": [
+    ["白噪音", "WHITE NOISE", "椰子朗姆 / 澄清菠萝 / 白胡椒 / 苏打", 118, "#ebe9df", ["清爽", "气泡", "热带"], [48, 66, 18]],
+    ["红线", "RED LINE", "龙舌兰 / 洛神花 / 血橙 / 粉红胡椒", 122, "#ef9386", ["酸甜", "辛香", "龙舌兰"], [78, 58, 55]],
+    ["十七号门", "DOOR 17", "黑麦威士忌 / 咖啡 / 苦艾 / 香草", 132, "#9f765d", ["苦甜", "咖啡", "厚重"], [22, 52, 88]],
+    ["温差", "TEMPERATURE GAP", "金酒 / 青瓜 / 接骨木花 / 冷萃茶", 116, "#c9ebd7", ["花香", "清爽", "茶感"], [35, 73, 29]],
+  ],
+  Moss: [
+    ["夜航船", "NIGHT FERRY", "波本 / 烟熏乌梅 / 黑糖 / 苦精", 128, "#c99d79", ["烟熏", "厚重", "威士忌"], [18, 35, 84]],
+    ["苔痕", "MOSS TRACE", "金酒 / 青苔草本 / 苹果 / 茴香", 118, "#9fcf9c", ["草本", "清爽", "金酒"], [42, 72, 38]],
+    ["温室雨", "GREENHOUSE RAIN", "白朗姆 / 番石榴 / 罗勒 / 椰子水", 114, "#c7e4c4", ["热带", "低酒精", "清爽"], [51, 67, 25]],
+    ["绿闪", "GREEN FLASH", "梅斯卡尔 / 青椒 / 青柠 / 海盐", 126, "#b8d77d", ["烟熏", "酸感", "辛香"], [76, 45, 72]],
+  ],
+  ECHO: [
+    ["回声室", "ECHO ROOM", "自然酒 / 白桃 / 紫苏 / 汤力", 108, "#efd6bb", ["自然酒", "清爽", "气泡"], [45, 69, 24]],
+    ["黑胶边", "VINYL EDGE", "陈年朗姆 / 黑莓 / 可可豆 / 苦精", 126, "#a47972", ["厚重", "苦甜", "朗姆"], [25, 48, 81]],
+    ["愚园风", "YUYUAN BREEZE", "金酒 / 桂花 / 黄瓜 / 苏打", 112, "#d8e8bd", ["花香", "低酒精", "清爽"], [37, 76, 22]],
+    ["第二拍", "SECOND BEAT", "伏特加 / 柚子 / 生姜 / 起泡酒", 116, "#f3d49b", ["酸甜", "气泡", "辛香"], [68, 57, 39]],
+  ],
+  FABLE: [
+    ["寓言结尾", "THE LAST FABLE", "干邑 / 杏仁 / 乌龙 / 橙皮", 132, "#c7a070", ["茶感", "坚果", "厚重"], [26, 61, 78]],
+    ["白桃章节", "WHITE PEACH", "金酒 / 白桃 / 茉莉 / 香槟", 122, "#f0d7c9", ["花香", "气泡", "清爽"], [44, 82, 35]],
+    ["反派", "ANTAGONIST", "梅斯卡尔 / 番茄 / 芹菜 / 黑胡椒", 128, "#d98771", ["烟熏", "咸鲜", "辛香"], [31, 47, 79]],
+    ["月下页", "MOON PAGE", "伏特加 / 荔枝 / 月桂 / 柠檬", 116, "#dad8e8", ["酸甜", "花香", "低酒精"], [63, 75, 24]],
+  ],
+  HUSH: [
+    ["静音键", "MUTE", "清酒 / 梨 / 白茶 / 柚子皮", 112, "#e6e0c9", ["茶感", "低酒精", "清爽"], [39, 62, 20]],
+    ["夜灯", "NIGHT LIGHT", "波本 / 烤香蕉 / 黑糖 / 肉桂", 124, "#c89662", ["厚重", "甜香", "威士忌"], [19, 54, 83]],
+    ["雾中花", "FLOWER IN FOG", "金酒 / 铃兰 / 白葡萄 / 酸奶澄清", 118, "#dce3d1", ["花香", "酸甜", "柔和"], [58, 81, 30]],
+    ["归途", "WAY HOME", "低度苦艾 / 佛手柑 / 蜂蜜 / 苏打", 106, "#d6e1a7", ["低酒精", "草本", "气泡"], [42, 65, 18]],
+  ],
+};
+
+const venueDrinkMenus = Object.fromEntries(Object.entries(drinkMenuSpecs).map(([bar, menu]) => [bar, menu.map(([name, english, formula, price, color, tags, taste]) => ({ name, english, formula, price, color, tags, taste, bar: `${bar} · 2026 夏季酒单` }))]));
 
 const navItems: { id: Tab; label: string; glyph: string }[] = [
   { id: "home", label: "发现", glyph: "⌁" },
@@ -166,7 +205,11 @@ export default function Home() {
 
   const handleNfc = () => {
     setNfcDone(true);
-    flash("已记录到今晚的路线");
+    flash(`${selectedBar.name} 到店成功 · 正在打开本店酒单`);
+    window.setTimeout(() => {
+      setNfcOpen(false);
+      changeTab("menu");
+    }, 720);
   };
 
   const handleLike = () => {
@@ -245,7 +288,7 @@ export default function Home() {
             onNfc={() => { setNfcDone(false); setNfcOpen(true); }}
           />
         )}
-        {tab === "menu" && <MenuView ratedDrinks={ratedDrinks} onRate={rateDrink} />}
+        {tab === "menu" && <MenuView selectedBar={selectedBar} onSelectBar={setSelectedBar} ratedDrinks={ratedDrinks} onRate={rateDrink} />}
         {tab === "community" && <CommunityPage
           personality={drinkPersonality}
           onGreet={(name) => flash(`已向 ${name} 发出一个轻松的招呼`)}
@@ -284,10 +327,10 @@ export default function Home() {
               <div className="checkin-success">
                 <div className="success-mark">✓</div>
                 <p className="eyebrow">CHECKED IN · 21:06</p>
-                <h2 id="nfc-title">Archive Room</h2>
-                <p className="modal-copy">陕西北路 · 今晚第 1 站<br />实时客流 62% · 预计无需等位</p>
+                <h2 id="nfc-title">{selectedBar.name}</h2>
+                <p className="modal-copy">{selectedBar.area} · 今晚第 1 站<br />实时客流 {selectedBar.crowd}% · {selectedBar.wait}</p>
                 <div className="success-route"><span>START</span><i /><b>01</b><i className="muted" /><span>NEXT</span></div>
-                <button className="primary-button full" onClick={() => { setNfcOpen(false); changeTab("menu"); }}>选择刚喝过的酒</button>
+                <button className="primary-button full" onClick={() => { setNfcOpen(false); changeTab("menu"); }}>打开 {selectedBar.name} 酒单</button>
                 <button className="text-button" onClick={() => setNfcOpen(false)}>稍后再说</button>
               </div>
             )}
@@ -332,6 +375,8 @@ function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onM
   seasonalMood: SeasonalMood;
 }) {
   const [communityFilters, setCommunityFilters] = useState<string[]>([]);
+  const [navigationMode, setNavigationMode] = useState(false);
+  const [activeTravelMode, setActiveTravelMode] = useState("");
   const tagDrag = useRef({ pointerId: -1, startX: 0, startScroll: 0, moved: false });
   const discoverableBars = [...bars, ...nearbyBars];
   const barMatchesFilters = (bar: typeof bars[number], filters = communityFilters) => !filters.length || filters.some((tag) => getConsensusTags(bar.id).includes(tag));
@@ -341,6 +386,22 @@ function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onM
   const selectedDisplayTags = Array.from(new Set([...selectedConsensusTags, ...selectedBar.tags])).slice(0, 4);
   const selectedTravel = barTravelGuides[selectedBar.id];
   const routeTimes = ["20:30", "21:45", "23:00"];
+
+  useEffect(() => {
+    setNavigationMode(false);
+    setActiveTravelMode(selectedTravel.modes.find((mode) => mode.recommended)?.label || selectedTravel.modes[0].label);
+  }, [selectedBar.id, selectedTravel]);
+
+  function toggleMapNavigation() {
+    setNavigationMode((active) => !active);
+    flash(navigationMode ? "已退出地图指路" : `${selectedTravel.route} · 开始指路`);
+  }
+
+  function chooseTravelMode(label: string) {
+    setActiveTravelMode(label);
+    setNavigationMode(true);
+    flash(`${selectedBar.name} · ${label} · 地图指路中`);
+  }
 
   function toggleCommunityFilter(tag: string) {
     if (tagDrag.current.moved) {
@@ -384,7 +445,7 @@ function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onM
           <div><p className="eyebrow">CITY PULSE · 实时</p><h2>今晚的上海，正在发热。</h2></div>
           <button className="map-filter" onClick={() => flash("筛选：步行 20 分钟内")}>步行 20 min⌄</button>
         </div>
-        <div className="city-map">
+        <div className={`city-map ${navigationMode ? "navigating" : ""}`}>
           <div className="map-grid" />
           <div className="road road-one" /><div className="road road-two" /><div className="road road-three" /><div className="road road-four" />
           <div className="district d1">南京西路</div><div className="district d2">巨鹿路</div><div className="district d3">武定路</div>
@@ -400,6 +461,17 @@ function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onM
           <div className="led-track track-one" aria-hidden="true"><i /></div>
           <div className="led-track track-two" aria-hidden="true"><i /></div>
           <div className="route-live-label"><i /> 推荐值越高 · 光流越快</div>
+          {navigationMode && (
+            <div className="map-navigation" aria-label={`${selectedTravel.route}，${activeTravelMode}，指路中`}>
+              {selectedTravel.segments.map((segment, index) => (
+                <i className="navigation-segment" style={{ left: segment.left, top: segment.top, width: segment.width, transform: `rotate(${segment.rotate}deg)` }} key={`${selectedBar.id}-${index}`}><b /></i>
+              ))}
+              <span className="navigation-point navigation-origin" style={{ left: selectedTravel.origin.left, top: selectedTravel.origin.top }}><i>起</i><b>{selectedTravel.origin.label}</b></span>
+              <span className="navigation-point navigation-destination" style={{ left: selectedBar.left, top: selectedBar.top }}><i>{selectedBar.logo}</i><b>当前 · {selectedBar.name}</b></span>
+              <span className="navigation-point navigation-next" style={{ left: selectedTravel.next.left, top: selectedTravel.next.top }}><i>→</i><b>下一站 · {selectedTravel.next.label}</b></span>
+              <span className="navigation-status"><i /> 指路中 · {activeTravelMode}</span>
+            </div>
+          )}
           {convenienceStores.map((store) => (
             <button
               key={store.name}
@@ -444,9 +516,9 @@ function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onM
           <article className="map-bar-card">
             <div className="map-card-main"><span className={`occupancy-dot ${selectedBar.tone}`} /><p>{selectedBar.area}</p><h3>{selectedBar.name}</h3><div className="inline-tags">{selectedDisplayTags.map((tag) => <span className={selectedConsensusTags.includes(tag) ? "consensus-auto" : ""} key={tag}>{tag}</span>)}</div><small className="tag-source-note">✓ {selectedConsensusTags.length} 个标签由 ≥{COMMUNITY_TAG_THRESHOLD} 人共识自动加入</small></div>
             <div className="bar-card-stat"><b>{selectedBar.crowd}%</b><span>{selectedBar.wait}</span><button onClick={onRoutes}>放进路线 →</button></div>
-            <div className="map-trip-suggestion">
-              <div><span>最近建议路线</span><b>{selectedTravel.route}</b></div>
-              <div className="travel-modes">{selectedTravel.modes.map((mode) => <button className={mode.recommended ? "recommended" : ""} key={mode.label} onClick={() => flash(`${selectedBar.name} · ${mode.label}`)}><i>{mode.glyph}</i>{mode.label}</button>)}</div>
+            <div className={`map-trip-suggestion ${navigationMode ? "active" : ""}`}>
+              <button className="map-trip-route" aria-pressed={navigationMode} onClick={toggleMapNavigation}><span>{navigationMode ? "正在指路 · 点击退出" : "最近建议路线 · 点击指路"}</span><b>{selectedTravel.route}</b><i>{navigationMode ? "×" : "→"}</i></button>
+              <div className="travel-modes">{selectedTravel.modes.map((mode) => <button className={`${mode.recommended ? "recommended" : ""} ${navigationMode && activeTravelMode === mode.label ? "active" : ""}`} key={mode.label} onClick={() => chooseTravelMode(mode.label)}><i>{mode.glyph}</i>{mode.label}</button>)}</div>
             </div>
           </article>
         </div>
@@ -627,17 +699,23 @@ function RoutesView({ likes, downs, liked, downed, onLike, onDown, onShare, onNf
   );
 }
 
-function MenuView({ ratedDrinks, onRate }: { ratedDrinks: string[]; onRate: (name: string) => void }) {
+function MenuView({ selectedBar, onSelectBar, ratedDrinks, onRate }: { selectedBar: typeof bars[number]; onSelectBar: (bar: typeof bars[number]) => void; ratedDrinks: string[]; onRate: (name: string) => void }) {
   const [filter, setFilter] = useState("全部");
-  const visible = filter === "全部" ? drinks : drinks.filter((drink) => drink.tags.includes(filter));
+  const menuBars = [...bars, ...nearbyBars];
+  const activeMenu = venueDrinkMenus[selectedBar.name] || venueDrinkMenus["Archive Room"];
+  const availableTags = ["全部", ...Array.from(new Set(activeMenu.flatMap((drink) => drink.tags)))].slice(0, 6);
+  const visible = filter === "全部" ? activeMenu : activeMenu.filter((drink) => drink.tags.includes(filter));
+
+  useEffect(() => setFilter("全部"), [selectedBar.id]);
+
   return (
     <div className="menu-page">
-      <section className="menu-frame" aria-label="完整季节酒单">
+      <section className="menu-frame" aria-label={`${selectedBar.name} 完整季节酒单`}>
         <section className="menu-hero">
-          <div><p className="eyebrow">SEASONAL MENUS · 2026 SUMMER</p><h2>把“好喝”拆成<br />你说得出的感觉。</h2><p>每杯酒都有配方、风味与来自喝过的人的标签。今天喝了什么，直接记下来。</p></div>
-          <div className="menu-count"><b>168</b><span>杯季节限定酒</span><small>来自上海 42 家酒吧</small><button>＋ 创建自定义标签</button></div>
+          <div><p className="eyebrow">NFC MENU · 当前到店</p><h2>{selectedBar.name}</h2><p>{selectedBar.area} · 碰一碰后自动定位本店酒单。每杯都有配方、风味与喝过的人的标签。</p><span className="menu-checkin-chip"><i /> 已定位本店 · 客流 {selectedBar.crowd}%</span></div>
+          <div className="menu-count"><b>{String(activeMenu.length).padStart(2, "0")}</b><span>杯本季精选</span><small>2026 夏季酒单</small><button>＋ 自定义标签</button></div>
         </section>
-        <div className="filter-row"><span>按标签筛选</span>{["全部", "酸甜", "清爽", "烟熏", "花香", "低酒精"].map((item) => <button key={item} className={filter === item ? "active" : ""} onClick={() => setFilter(item)}>{item}</button>)}<button className="more-filter">更多筛选 ＋</button></div>
+        <div className="filter-row" aria-label="切换酒吧与标签筛选"><span>切换酒吧</span>{menuBars.map((bar) => <button key={bar.id} className={`venue-filter ${selectedBar.id === bar.id ? "active" : ""}`} onClick={() => onSelectBar(bar)}>{bar.name}</button>)}<i className="filter-divider" /><span>口味</span>{availableTags.map((item) => <button key={item} className={`taste-filter ${filter === item ? "active" : ""}`} onClick={() => setFilter(item)}>{item}</button>)}</div>
         <section className="drink-grid">
           {visible.map((drink, index) => (
             <article className="drink-card" key={drink.name}>
