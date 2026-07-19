@@ -719,7 +719,10 @@ function MenuView({ selectedBar, onSelectBar, ratedDrinks, onRate }: { selectedB
           <div><p className="eyebrow">NFC MENU · 当前到店</p><h2>{selectedBar.name}</h2><p>{selectedBar.area} · 碰一碰后自动定位本店酒单。每杯都有配方、风味与喝过的人的标签。</p><span className="menu-checkin-chip"><i /> 已定位本店 · 客流 {selectedBar.crowd}%</span></div>
           <div className="menu-count"><b>{String(activeMenu.length).padStart(2, "0")}</b><span>杯本季精选</span><small>2026 夏季酒单</small><button>＋ 自定义标签</button></div>
         </section>
-        <div className="filter-row" aria-label="切换酒吧与标签筛选"><span>切换酒吧</span>{menuBars.map((bar) => <button key={bar.id} className={`venue-filter ${selectedBar.id === bar.id ? "active" : ""}`} onClick={() => onSelectBar(bar)}>{bar.name}</button>)}<i className="filter-divider" /><span>口味</span>{availableTags.map((item) => <button key={item} className={`taste-filter ${filter === item ? "active" : ""}`} onClick={() => setFilter(item)}>{item}</button>)}</div>
+        <div className="menu-filter-stack">
+          <div className="filter-row venue-filter-row" aria-label="切换酒吧"><span>酒吧</span>{menuBars.map((bar) => <button key={bar.id} className={`venue-filter ${selectedBar.id === bar.id ? "active" : ""}`} onClick={() => onSelectBar(bar)}>{bar.name}</button>)}</div>
+          <div className="filter-row taste-filter-row" aria-label="按口味筛选"><span>口味</span>{availableTags.map((item) => <button key={item} className={`taste-filter ${filter === item ? "active" : ""}`} onClick={() => setFilter(item)}>{item}</button>)}</div>
+        </div>
         <section className="drink-grid">
           {visible.map((drink, index) => (
             <article className="drink-card" key={drink.name}>
