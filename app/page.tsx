@@ -233,8 +233,8 @@ export default function Home() {
   return (
     <div className={`app-shell season-${seasonalMood.theme}`}>
       <aside className="side-nav" aria-label="主导航">
-        <button className="brand-mark" aria-label="8+1 首页" onClick={() => changeTab("home")}>
-          <span>8</span><b>+1</b>
+        <button className="brand-mark" aria-label="TapNight 首页" onClick={() => changeTab("home")}>
+          <span>TAP</span><b>NIGHT</b>
         </button>
         <div className="nav-stack">
           {navItems.map((item) => (
@@ -317,9 +317,9 @@ export default function Home() {
               <>
                 <p className="eyebrow">NFC CHECK-IN</p>
                 <h2 id="nfc-title">碰一下，开始今晚。</h2>
-                <p className="modal-copy">手机靠近店内的 8+1 感应牌，无需打开 App。原型中可点击下方模拟。</p>
+                <p className="modal-copy">手机靠近店内的 TapNight 感应牌，无需打开 App。原型中可点击下方模拟。</p>
                 <button className="nfc-orb" onClick={handleNfc} aria-label="模拟 NFC 碰一下">
-                  <span>8+1</span><small>靠近感应</small>
+                  <span>TapNight</span><small>靠近感应</small>
                 </button>
                 <button className="primary-button full" onClick={handleNfc}>模拟碰一下</button>
                 <p className="privacy-note">仅记录门店、时间和匿名设备凭证 · 可随时删除</p>
@@ -343,7 +343,7 @@ export default function Home() {
         <div className="modal-backdrop" role="presentation" onMouseDown={() => setPlannerOpen(false)}>
           <section className="planner-modal" role="dialog" aria-modal="true" aria-labelledby="planner-title" onMouseDown={(event) => event.stopPropagation()}>
             <button className="modal-close" aria-label="关闭" onClick={() => setPlannerOpen(false)}>×</button>
-            <p className="eyebrow">8+1 AI · TONIGHT</p>
+            <p className="eyebrow">TAPNIGHT AI · TONIGHT</p>
             <h2 id="planner-title">你想要一个怎样的夜晚？</h2>
             <p className="modal-copy">选你此刻在意的，路线会结合实时客流、酒单标签与过往偏好生成。</p>
             <div className="planner-section">
@@ -532,7 +532,7 @@ function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onM
 
       <div className="home-secondary-rail" aria-label="标签筛选与今晚推荐">
       <aside className="tonight-panel">
-        <p className="eyebrow">8+1 AI · FOR YOU</p>
+        <p className="eyebrow">TAPNIGHT AI · FOR YOU</p>
         <h2>今晚路线，按标签重排。</h2>
         <p className="panel-intro">选择大家反复标记的感觉，地图和路线会一起变化。</p>
         <section className="consensus-filter" aria-label="大家共识标签筛选">
@@ -583,9 +583,9 @@ function DailyHub({ onMenu, onRoutes, onDaily, flash, compact = false }: { onMen
   ];
 
   return (
-    <section className={`daily-hub full-span ${compact ? "daily-compact" : ""}`} aria-label="8+1 每日内容与品牌推荐">
+    <section className={`daily-hub full-span ${compact ? "daily-compact" : ""}`} aria-label="TapNight 每日内容与品牌推荐">
       <header className="daily-hub-head">
-        <div><p className="eyebrow">THE DAILY 8+1 · 每天更新</p><h2>今天值得喝的，也值得读。</h2></div>
+        <div><p className="eyebrow">THE DAILY TAPNIGHT · 每天更新</p><h2>今天值得喝的，也值得读。</h2></div>
         {compact ? <button className="daily-open" onClick={onDaily}>查看今日全部 →</button> : <span><i /> 今日 12:00 已更新</span>}
       </header>
       {!compact && <div className="daily-tabs" role="tablist" aria-label="每日内容分类">
@@ -638,7 +638,7 @@ function DailyHub({ onMenu, onRoutes, onDaily, flash, compact = false }: { onMen
             <section className="bartender-interview-section">
               <div className="daily-kicker"><span>调酒师怎么说</span><em>采访专栏 · 林野 · Moss 主理调酒师</em></div>
               <h3>“一条路线，不该把夜晚写死。”</h3>
-              <div className="bartender-interview-card"><small>Q · 你怎么决定一条路线的结束？</small><blockquote>“留一点意外，也留一点清醒。最后一杯应该让人愿意回家。”</blockquote><span>林野 · 8+1 本期调酒师访问</span><button onClick={() => flash("已打开林野的完整采访")}>读完整采访 →</button></div>
+              <div className="bartender-interview-card"><small>Q · 你怎么决定一条路线的结束？</small><blockquote>“留一点意外，也留一点清醒。最后一杯应该让人愿意回家。”</blockquote><span>林野 · TapNight 本期调酒师访问</span><button onClick={() => flash("已打开林野的完整采访")}>读完整采访 →</button></div>
               <div className="bartender-quote-notes"><span><small>第一杯</small><b>先问今晚想不想醉</b></span><span><small>选店</small><b>用声音和座位决定</b></span><span><small>收尾</small><b>留清醒回家的余地</b></span></div>
             </section>
             <section className="bartender-route-pick"><div><small>BARTENDER ROUTE</small><b>林野今晚推荐的三站</b><span>Moss → NO. 17 → Archive Room</span></div><button onClick={onRoutes}>走这条路线 →</button></section>
@@ -852,7 +852,7 @@ function CommunityPage({ personality, onGreet, onSavePersonality }: {
   return (
     <div className="community-page">
       <section className="community-intro personality-intro">
-        <div><p className="eyebrow">8+1 SOCIAL · 16 DRINKING TYPES</p><h2>先测酒格，<br />再碰酒友。</h2></div>
+        <div><p className="eyebrow">TAPNIGHT SOCIAL · 16 DRINKING TYPES</p><h2>先测酒格，<br />再碰酒友。</h2></div>
         <button className="personality-entry" onClick={() => setTestOpen(true)}>
           <span>类似 MBTI · 16 型喝酒人格</span>
           <strong>{personality ? `${personality.type} · ${personality.name}` : "12 题 · 约 2 分钟"}</strong>
@@ -894,7 +894,7 @@ function CommunityPage({ personality, onGreet, onSavePersonality }: {
       {testOpen && (
         <div className="personality-overlay" onClick={() => setTestOpen(false)}>
           <section className="personality-dialog" role="dialog" aria-modal="true" aria-label="16 型喝酒人格测试" onClick={(event) => event.stopPropagation()}>
-            <header className="personality-dialog-head"><div><p className="eyebrow">8+1 DRINKING TYPE</p><b>16 型喝酒人格</b></div><button onClick={() => setTestOpen(false)} aria-label="关闭喝酒人格测试">×</button></header>
+            <header className="personality-dialog-head"><div><p className="eyebrow">TAPNIGHT DRINKING TYPE</p><b>16 型喝酒人格</b></div><button onClick={() => setTestOpen(false)} aria-label="关闭喝酒人格测试">×</button></header>
             {testResult ? (
               <div className="personality-result">
                 <p>你的喝酒人格是</p>

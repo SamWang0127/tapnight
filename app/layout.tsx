@@ -9,18 +9,24 @@ export async function generateMetadata(): Promise<Metadata> {
   const origin = `${protocol}://${host}`;
 
   return {
-    title: "8+1｜碰一下，开始今晚",
+    title: "TapNight｜碰一下，开始今晚",
+    applicationName: "TapNight",
     description: "实时酒吧热力、NFC 到店打卡、AI 喝酒路线与每季酒单。",
+    appleWebApp: {
+      capable: true,
+      title: "TapNight",
+      statusBarStyle: "black-translucent",
+    },
     openGraph: {
-      title: "8+1｜碰一下，开始今晚",
+      title: "TapNight｜碰一下，开始今晚",
       description: "记录你的喝酒路线，找到下一家刚刚好的酒吧。",
       type: "website",
       locale: "zh_CN",
-      images: [{ url: `${origin}/og.png`, width: 1200, height: 630, alt: "8+1 城市喝酒路线" }],
+      images: [{ url: `${origin}/og.png`, width: 1200, height: 630, alt: "TapNight 城市喝酒路线" }],
     },
     twitter: {
       card: "summary_large_image",
-      title: "8+1｜碰一下，开始今晚",
+      title: "TapNight｜碰一下，开始今晚",
       description: "记录你的喝酒路线，找到下一家刚刚好的酒吧。",
       images: [`${origin}/og.png`],
     },
