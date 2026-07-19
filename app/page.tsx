@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 type Tab = "home" | "daily" | "routes" | "menu" | "community" | "profile";
 type SeasonTheme = "spring" | "summer" | "autumn" | "winter";
 type SeasonalMood = { theme: SeasonTheme; term: string; climate: string; glyph: string };
+type DrinkPersonality = { type: string; name: string };
 
 const solarTerms = [
   ["小寒", "大寒", 20], ["立春", "雨水", 19], ["惊蛰", "春分", 20], ["清明", "谷雨", 20],
@@ -38,6 +39,15 @@ const nearbyBars = [
   { id: 5, name: "FABLE", logo: "F", logoClass: "logo-nearby", area: "富民路", crowd: 71, wait: "少量空位", tone: "coral", left: "42%", top: "50%", tags: ["附近", "经典鸡尾酒", "吧台"] },
   { id: 6, name: "HUSH", logo: "H", logoClass: "logo-nearby", area: "常熟路", crowd: 39, wait: "座位充足", tone: "mint", left: "89%", top: "42%", tags: ["附近", "安静", "低酒精"] },
 ];
+
+const barTravelGuides: Record<number, { route: string; modes: { glyph: string; label: string; recommended?: boolean }[] }> = {
+  1: { route: "静安寺 → Archive Room → FABLE", modes: [{ glyph: "步", label: "步行 9 min", recommended: true }, { glyph: "地", label: "2号线 + 步行 14 min" }] },
+  2: { route: "陕西南路 → NO. 17 → Archive Room", modes: [{ glyph: "步", label: "步行 8 min", recommended: true }, { glyph: "车", label: "打车 6 min" }] },
+  3: { route: "昌平路 → Moss → Moss Annex", modes: [{ glyph: "步", label: "步行 5 min", recommended: true }, { glyph: "骑", label: "骑行 8 min" }] },
+  4: { route: "静安寺 → ECHO → Archive Room", modes: [{ glyph: "骑", label: "骑行 10 min", recommended: true }, { glyph: "地", label: "2号线 + 步行 13 min" }] },
+  5: { route: "陕西南路 → FABLE → NO. 17", modes: [{ glyph: "步", label: "步行 7 min", recommended: true }, { glyph: "骑", label: "骑行 6 min" }] },
+  6: { route: "常熟路 → HUSH → Moss", modes: [{ glyph: "步", label: "步行 6 min", recommended: true }, { glyph: "地", label: "7号线 + 步行 12 min" }] },
+};
 
 const convenienceStores = [
   { name: "全家", mark: "全", className: "store-family", left: "10%", top: "55%", walk: "距 Archive Room 步行 3 min" },
@@ -129,6 +139,7 @@ export default function Home() {
   const [downed, setDowned] = useState(false);
   const [ratedDrinks, setRatedDrinks] = useState<string[]>([]);
   const [activeTags, setActiveTags] = useState(["酸一点", "安静", "有小惊喜"]);
+  const [drinkPersonality, setDrinkPersonality] = useState<DrinkPersonality | null>(null);
   const [time, setTime] = useState("--:--");
 
   useEffect(() => {
@@ -235,7 +246,14 @@ export default function Home() {
           />
         )}
         {tab === "menu" && <MenuView ratedDrinks={ratedDrinks} onRate={rateDrink} />}
-        {tab === "community" && <CommunityPage onGreet={(name) => flash(`已向 ${name} 发出一个轻松的招呼`)} />}
+        {tab === "community" && <CommunityPage
+          personality={drinkPersonality}
+          onGreet={(name) => flash(`已向 ${name} 发出一个轻松的招呼`)}
+          onSavePersonality={(personality) => {
+            setDrinkPersonality(personality);
+            flash(`${personality.type} · ${personality.name} 已加到酒鬼勋章`);
+          }}
+        />}
         {tab === "profile" && <ProfileView onVerify={() => flash("认证申请入口已打开")} />}
       </main>
 
@@ -321,6 +339,7 @@ function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onM
   const suggestedRouteBars = (communityFilters.length ? matchedBars : bars).slice(0, 3);
   const selectedConsensusTags = getConsensusTags(selectedBar.id);
   const selectedDisplayTags = Array.from(new Set([...selectedConsensusTags, ...selectedBar.tags])).slice(0, 4);
+  const selectedTravel = barTravelGuides[selectedBar.id];
   const routeTimes = ["20:30", "21:45", "23:00"];
 
   function toggleCommunityFilter(tag: string) {
@@ -423,8 +442,12 @@ function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onM
           </button>
           <button className="nfc-fab" onClick={onNfc}><span>⌁</span><b>碰一下打卡</b><small>无需打开 App</small></button>
           <article className="map-bar-card">
-            <div><span className={`occupancy-dot ${selectedBar.tone}`} /><p>{selectedBar.area}</p><h3>{selectedBar.name}</h3><div className="inline-tags">{selectedDisplayTags.map((tag) => <span className={selectedConsensusTags.includes(tag) ? "consensus-auto" : ""} key={tag}>{tag}</span>)}</div><small className="tag-source-note">✓ {selectedConsensusTags.length} 个标签由 ≥{COMMUNITY_TAG_THRESHOLD} 人共识自动加入</small></div>
+            <div className="map-card-main"><span className={`occupancy-dot ${selectedBar.tone}`} /><p>{selectedBar.area}</p><h3>{selectedBar.name}</h3><div className="inline-tags">{selectedDisplayTags.map((tag) => <span className={selectedConsensusTags.includes(tag) ? "consensus-auto" : ""} key={tag}>{tag}</span>)}</div><small className="tag-source-note">✓ {selectedConsensusTags.length} 个标签由 ≥{COMMUNITY_TAG_THRESHOLD} 人共识自动加入</small></div>
             <div className="bar-card-stat"><b>{selectedBar.crowd}%</b><span>{selectedBar.wait}</span><button onClick={onRoutes}>放进路线 →</button></div>
+            <div className="map-trip-suggestion">
+              <div><span>最近建议路线</span><b>{selectedTravel.route}</b></div>
+              <div className="travel-modes">{selectedTravel.modes.map((mode) => <button className={mode.recommended ? "recommended" : ""} key={mode.label} onClick={() => flash(`${selectedBar.name} · ${mode.label}`)}><i>{mode.glyph}</i>{mode.label}</button>)}</div>
+            </div>
           </article>
         </div>
       </section>
@@ -628,17 +651,128 @@ function MenuView({ ratedDrinks, onRate }: { ratedDrinks: string[]; onRate: (nam
   );
 }
 
-function CommunityPage({ onGreet }: { onGreet: (name: string) => void }) {
+const drinkingPersonalityQuestions = [
+  { axis: "E / I", prompt: "刚进酒吧，哪种状态让你更快进入今晚？", options: [
+    { letter: "E", title: "先去吧台看看谁在", detail: "有互动，夜晚才真正开始" },
+    { letter: "I", title: "先找一个舒服的位置", detail: "安静下来，才听得到自己的口味" },
+  ] },
+  { axis: "E / I", prompt: "朋友临时又带来两个人，你的第一反应是？", options: [
+    { letter: "E", title: "人多一点更有意思", detail: "新面孔可能带来新的下一站" },
+    { letter: "I", title: "希望还能好好说话", detail: "小桌和熟人更容易放松" },
+  ] },
+  { axis: "E / I", prompt: "喝到第二杯时，你通常在？", options: [
+    { letter: "E", title: "和隔壁聊起隐藏酒单", detail: "聊天是今晚的另一种风味" },
+    { letter: "I", title: "慢慢感受这一杯的变化", detail: "不急着把安静填满" },
+  ] },
+  { axis: "S / N", prompt: "面对一张完全陌生的酒单，你会？", options: [
+    { letter: "S", title: "从熟悉的基酒开始", detail: "先抓住可判断的风味线索" },
+    { letter: "N", title: "直接问本季最奇怪的一杯", detail: "未知比稳妥更让人兴奋" },
+  ] },
+  { axis: "S / N", prompt: "选择下一家店时，哪个信息更打动你？", options: [
+    { letter: "S", title: "有位、好走、酒单稳定", detail: "真实体验比概念更重要" },
+    { letter: "N", title: "新概念、隐藏门、限定夜", detail: "一个好故事值得绕点路" },
+  ] },
+  { axis: "S / N", prompt: "你更容易记住一家酒吧的什么？", options: [
+    { letter: "S", title: "那杯酒具体的香气和口感", detail: "细节会留下可靠的坐标" },
+    { letter: "N", title: "那个晚上整体的想象空间", detail: "氛围会继续长成故事" },
+  ] },
+  { axis: "T / F", prompt: "朋友问“今晚去哪喝”，你会先考虑？", options: [
+    { letter: "T", title: "距离、客满和酒单匹配度", detail: "把有限的夜晚安排得更准" },
+    { letter: "F", title: "大家此刻想要什么感觉", detail: "合适的气氛比最优解重要" },
+  ] },
+  { axis: "T / F", prompt: "一杯酒不太合口味时，你会？", options: [
+    { letter: "T", title: "拆解配方，找到不喜欢的原因", detail: "判断清楚，下次推荐才更准" },
+    { letter: "F", title: "记录它带来的感觉和场景", detail: "不喜欢也可能是独特记忆" },
+  ] },
+  { axis: "T / F", prompt: "评价一条路线时，你更在意？", options: [
+    { letter: "T", title: "节奏、距离和风味递进", detail: "好路线应该经得起复走" },
+    { letter: "F", title: "同行的人有没有被照顾到", detail: "每个人舒服才是好路线" },
+  ] },
+  { axis: "J / P", prompt: "出门前，你通常会把今晚安排到哪一步？", options: [
+    { letter: "J", title: "三站和备用店都先排好", detail: "计划让夜晚更自由" },
+    { letter: "P", title: "只定第一杯，之后再说", detail: "最好的下一站常在路上出现" },
+  ] },
+  { axis: "J / P", prompt: "计划中的店突然客满，你会？", options: [
+    { letter: "J", title: "立刻切到收藏好的备用店", detail: "路线可以变，但节奏不能断" },
+    { letter: "P", title: "顺着附近热度临时发现", detail: "意外就是今晚的新分支" },
+  ] },
+  { axis: "J / P", prompt: "什么时候你会觉得“今晚可以收尾了”？", options: [
+    { letter: "J", title: "走完预想中的完整弧线", detail: "有开始，也要有漂亮的结尾" },
+    { letter: "P", title: "感觉到了，自然就结束", detail: "不需要为了完成计划再喝一杯" },
+  ] },
+];
+
+const drinkingTypeNames: Record<string, string> = {
+  INTJ: "夜航策展人", INTP: "配方解谜者", ENTJ: "路线领航员", ENTP: "隐藏款猎手",
+  INFJ: "深夜倾听者", INFP: "氛围收藏家", ENFJ: "酒桌连接者", ENFP: "即兴夜游家",
+  ISTJ: "熟店守夜人", ISFJ: "安静照顾者", ESTJ: "高效组局人", ESFJ: "热场款待家",
+  ISTP: "吧台观察员", ISFP: "风味感受家", ESTP: "续摊发动机", ESFP: "今晚主角",
+};
+
+function getDrinkingPersonality(type: string) {
+  const energy = type[0] === "E" ? "你从人群和现场互动里获得能量" : "你在安静与少数熟人之间慢慢充电";
+  const discovery = type[1] === "N" ? "总会为未知风味多走一段路" : "相信真实细节和稳定的好味道";
+  const decision = type[2] === "T" ? "习惯用酒单、距离和节奏做判断" : "会先照顾当晚每个人的感觉";
+  const pace = type[3] === "J" ? "喜欢让路线有清楚的起承转合" : "也愿意把下一站交给临场灵感";
+  return {
+    name: drinkingTypeNames[type] || "夜晚漫游者",
+    summary: `${energy}，${discovery}；${decision}，${pace}。`,
+    bar: type[0] === "I" ? "Archive Room · 安静吧台" : "NO. 17 · 开放式吧台",
+    route: type[3] === "J" ? "适合：三站风味递进路线" : "适合：开放式附近热度路线",
+    tags: [type[0] === "E" ? "社交充电" : "独处充电", type[1] === "N" ? "隐藏款猎手" : "熟味观察", type[2] === "T" ? "理性选酒" : "氛围优先", type[3] === "J" ? "路线规划" : "即兴续摊"],
+  };
+}
+
+function CommunityPage({ personality, onGreet, onSavePersonality }: {
+  personality: DrinkPersonality | null;
+  onGreet: (name: string) => void;
+  onSavePersonality: (personality: DrinkPersonality) => void;
+}) {
   const [greeted, setGreeted] = useState<string[]>([]);
+  const [testOpen, setTestOpen] = useState(false);
+  const [testStep, setTestStep] = useState(0);
+  const [testAnswers, setTestAnswers] = useState<string[]>([]);
+  const [personalityType, setPersonalityType] = useState(personality?.type || "");
+  const currentQuestion = drinkingPersonalityQuestions[testStep];
+  const testResult = personalityType ? getDrinkingPersonality(personalityType) : null;
 
   const greet = (name: string) => {
     if (!greeted.includes(name)) setGreeted((people) => [...people, name]);
     onGreet(name);
   };
 
+  const answerPersonalityQuestion = (letter: string) => {
+    const nextAnswers = [...testAnswers, letter];
+    setTestAnswers(nextAnswers);
+    if (testStep < drinkingPersonalityQuestions.length - 1) {
+      setTestStep((step) => step + 1);
+      return;
+    }
+    const type = ["EI", "SN", "TF", "JP"].map((pair) => {
+      const first = nextAnswers.filter((answer) => answer === pair[0]).length;
+      const second = nextAnswers.filter((answer) => answer === pair[1]).length;
+      return first > second ? pair[0] : pair[1];
+    }).join("");
+    setPersonalityType(type);
+  };
+
+  const restartPersonalityTest = () => {
+    setTestStep(0);
+    setTestAnswers([]);
+    setPersonalityType("");
+  };
+
   return (
     <div className="community-page">
-      <section className="community-intro"><div><p className="eyebrow">8+1 SOCIAL · SHANGHAI</p><h2>见过几次，<br />才算有点熟。</h2></div><p>榜单鼓励安全、多样和有帮助的记录；偶遇只在双方授权后出现。</p></section>
+      <section className="community-intro personality-intro">
+        <div><p className="eyebrow">8+1 SOCIAL · 16 DRINKING TYPES</p><h2>先测酒格，<br />再碰酒友。</h2></div>
+        <button className="personality-entry" onClick={() => setTestOpen(true)}>
+          <span>类似 MBTI · 16 型喝酒人格</span>
+          <strong>{personality ? `${personality.type} · ${personality.name}` : "12 题 · 约 2 分钟"}</strong>
+          <small>社交能量 × 探索倾向 × 判断方式 × 路线节奏</small>
+          <i>{personality ? "查看结果 / 重测 →" : "开始测试 →"}</i>
+        </button>
+      </section>
       <section className="social-profile-grid">
         <article className="leaderboard-panel">
           <div className="section-heading compact"><div><p className="eyebrow">BADGE LEADERBOARD · 上海</p><h2>酒鬼勋章榜</h2></div><span className="board-period">本月</span></div>
@@ -646,7 +780,10 @@ function CommunityPage({ onGreet }: { onGreet: (name: string) => void }) {
           <div className="leaderboard-list">
             {[
               ["01", "Yoko", "路线策展人", "18 枚", "Y"], ["02", "Momo", "清醒收尾", "16 枚", "M"], ["03", "Kino", "风味记录者", "14 枚", "K"], ["04", "Sam Wang", "夜行路线家", "11 枚", "SW"],
-            ].map((person) => <div className={`leaderboard-row ${person[1] === "Sam Wang" ? "current" : ""}`} key={person[1]}><span>{person[0]}</span><i>{person[4]}</i><div><b>{person[1]}</b><small>{person[2]}</small></div><strong>{person[3]}</strong></div>)}
+            ].map((person) => {
+              const isCurrent = person[1] === "Sam Wang";
+              return <div className={`leaderboard-row ${isCurrent ? "current" : ""}`} key={person[1]}><span>{person[0]}</span><i>{person[4]}</i><div><b>{person[1]}{isCurrent && personality && <em className="personality-badge">{personality.type} · {personality.name}</em>}</b><small>{person[2]}</small></div><strong>{person[3]}</strong></div>;
+            })}
           </div>
         </article>
 
@@ -666,6 +803,32 @@ function CommunityPage({ onGreet }: { onGreet: (name: string) => void }) {
           </div>
         </article>
       </section>
+
+      {testOpen && (
+        <div className="personality-overlay" onClick={() => setTestOpen(false)}>
+          <section className="personality-dialog" role="dialog" aria-modal="true" aria-label="16 型喝酒人格测试" onClick={(event) => event.stopPropagation()}>
+            <header className="personality-dialog-head"><div><p className="eyebrow">8+1 DRINKING TYPE</p><b>16 型喝酒人格</b></div><button onClick={() => setTestOpen(false)} aria-label="关闭喝酒人格测试">×</button></header>
+            {testResult ? (
+              <div className="personality-result">
+                <p>你的喝酒人格是</p>
+                <div className="personality-code"><b>{personalityType}</b><span>{testResult.name}</span></div>
+                <p className="personality-summary">{testResult.summary}</p>
+                <div className="personality-dimensions">{testResult.tags.map((tag, index) => <span key={tag}><b>{personalityType[index]}</b>{tag}</span>)}</div>
+                <div className="personality-recommendation"><span><small>推荐酒吧</small><b>{testResult.bar}</b></span><span><small>推荐走法</small><b>{testResult.route}</b></span></div>
+                <div className="personality-result-actions"><button className="save-personality" disabled={personality?.type === personalityType} onClick={() => { onSavePersonality({ type: personalityType, name: testResult.name }); setTestOpen(false); }}>{personality?.type === personalityType ? "✓ 已加入酒鬼勋章" : "＋ 加到酒鬼勋章"}</button><button onClick={restartPersonalityTest}>重新测试</button></div>
+              </div>
+            ) : (
+              <div className="personality-question">
+                <div className="personality-progress"><span><b>{String(testStep + 1).padStart(2, "0")}</b> / {drinkingPersonalityQuestions.length}</span><em>{currentQuestion.axis}</em><i><b style={{ width: `${((testStep + 1) / drinkingPersonalityQuestions.length) * 100}%` }} /></i></div>
+                <div className="personality-axis-row">{["E / I", "S / N", "T / F", "J / P"].map((axis) => <span className={currentQuestion.axis === axis ? "active" : ""} key={axis}>{axis}</span>)}</div>
+                <h3>{currentQuestion.prompt}</h3>
+                <div className="personality-options">{currentQuestion.options.map((option) => <button key={option.letter} onClick={() => answerPersonalityQuestion(option.letter)}><b>{option.letter}</b><span><strong>{option.title}</strong><small>{option.detail}</small></span><i>→</i></button>)}</div>
+                <p className="personality-note">没有标准答案，只按你大多数夜晚的真实反应选择。</p>
+              </div>
+            )}
+          </section>
+        </div>
+      )}
     </div>
   );
 }
