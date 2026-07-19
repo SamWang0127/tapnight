@@ -449,6 +449,7 @@ function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onM
           <button className="map-filter" onClick={() => flash("筛选：步行 20 分钟内")}>步行 20 min⌄</button>
         </div>
         <div className={`city-map ${navigationMode ? "navigating" : ""}`}>
+          <div className={`map-camera ${navigationMode ? `route-overview camera-${activeMode.kind}` : ""}`}>
           <div className="map-grid" />
           <div className="road road-one" /><div className="road road-two" /><div className="road road-three" /><div className="road road-four" />
           <div className="district d1">南京西路</div><div className="district d2">巨鹿路</div><div className="district d3">武定路</div>
@@ -512,6 +513,7 @@ function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onM
               <span className="bar-logo-mark">{bar.logo}</span><b>{bar.crowd}%</b>
             </button>
           ))}
+          </div>
           <div className="map-legend"><span><i className="legend-mint" />舒适</span><span><i className="legend-coral" />较满</span><span><i className="legend-nearby" />附近</span><span><i className="legend-store" />便利店</span><b>刚刚更新</b></div>
           <button className="climate-pill" onClick={() => flash(`${seasonalMood.term}气候图层 · ${seasonalMood.climate}`)} aria-label={`当前节气 ${seasonalMood.term}，${seasonalMood.climate}`}>
             <span>{seasonalMood.glyph}</span><b>{seasonalMood.term}</b><small>{seasonalMood.climate}</small>
