@@ -378,6 +378,8 @@ function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onM
   const [communityFilters, setCommunityFilters] = useState<string[]>([]);
   const [navigationMode, setNavigationMode] = useState(false);
   const [activeTravelMode, setActiveTravelMode] = useState("");
+  const [mapZoom, setMapZoom] = useState(1);
+  const mapPinch = useRef({ pointers: new Map<number, { x: number; y: number }>(), startDistance: 0, startZoom: 1 });
   const tagDrag = useRef({ pointerId: -1, startX: 0, startScroll: 0, moved: false });
   const discoverableBars = [...bars, ...nearbyBars];
   const barMatchesFilters = (bar: typeof bars[number], filters = communityFilters) => !filters.length || filters.some((tag) => getConsensusTags(bar.id).includes(tag));
@@ -404,6 +406,41 @@ function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onM
     setActiveTravelMode(label);
     setNavigationMode(true);
     flash(`${selectedBar.name} · ${label} · 地图指路中`);
+  }
+
+  const clampMapZoom = (value: number) => Math.min(1.8, Math.max(.75, Math.round(value * 100) / 100));
+
+  function adjustMapZoom(delta: number) {
+    setMapZoom((value) => clampMapZoom(value + delta));
+  }
+
+  function beginMapPinch(event: React.PointerEvent<HTMLDivElement>) {
+    if (event.pointerType !== "touch") return;
+    const gesture = mapPinch.current;
+    gesture.pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    event.currentTarget.setPointerCapture(event.pointerId);
+    if (gesture.pointers.size === 2) {
+      const [first, second] = Array.from(gesture.pointers.values());
+      gesture.startDistance = Math.hypot(first.x - second.x, first.y - second.y);
+      gesture.startZoom = mapZoom;
+    }
+  }
+
+  function moveMapPinch(event: React.PointerEvent<HTMLDivElement>) {
+    const gesture = mapPinch.current;
+    if (!gesture.pointers.has(event.pointerId)) return;
+    gesture.pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (gesture.pointers.size !== 2 || !gesture.startDistance) return;
+    const [first, second] = Array.from(gesture.pointers.values());
+    const distance = Math.hypot(first.x - second.x, first.y - second.y);
+    setMapZoom(clampMapZoom(gesture.startZoom * distance / gesture.startDistance));
+  }
+
+  function endMapPinch(event: React.PointerEvent<HTMLDivElement>) {
+    const gesture = mapPinch.current;
+    gesture.pointers.delete(event.pointerId);
+    if (gesture.pointers.size < 2) gesture.startDistance = 0;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
   }
 
   function toggleCommunityFilter(tag: string) {
@@ -449,6 +486,15 @@ function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onM
           <button className="map-filter" onClick={() => flash("筛选：步行 20 分钟内")}>步行 20 min⌄</button>
         </div>
         <div className={`city-map ${navigationMode ? "navigating" : ""}`}>
+          <div
+            className="map-zoom-layer"
+            style={{ "--map-zoom": mapZoom } as React.CSSProperties}
+            onPointerDown={beginMapPinch}
+            onPointerMove={moveMapPinch}
+            onPointerUp={endMapPinch}
+            onPointerCancel={endMapPinch}
+            aria-label="可缩放地图，支持双指缩放"
+          >
           <div className={`map-camera ${navigationMode ? `route-overview camera-${activeMode.kind}` : ""}`}>
           <div className="map-grid" />
           <div className="road road-one" /><div className="road road-two" /><div className="road road-three" /><div className="road road-four" />
@@ -474,7 +520,6 @@ function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onM
               {activeMode.via && <span className="navigation-point navigation-via" style={{ left: activeMode.via.left, top: activeMode.via.top }}><i>{activeMode.glyph}</i><b>途经 · {activeMode.via.label}</b></span>}
               <span className="navigation-point navigation-destination" style={{ left: selectedBar.left, top: selectedBar.top }}><i>{selectedBar.logo}</i><b>当前 · {selectedBar.name}</b></span>
               <span className="navigation-point navigation-next" style={{ left: selectedTravel.next.left, top: selectedTravel.next.top }}><i>→</i><b>下一站 · {selectedTravel.next.label}</b></span>
-              <span className="navigation-status"><i /> {activeMode.kind === "walk" ? "街区步行" : activeMode.kind === "metro" ? "地铁接驳" : activeMode.kind === "drive" ? "驾车路线" : "骑行路线"} · {activeMode.label}</span>
             </div>
           )}
           {convenienceStores.map((store) => (
@@ -514,7 +559,14 @@ function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onM
             </button>
           ))}
           </div>
+          </div>
           <div className="map-legend"><span><i className="legend-mint" />舒适</span><span><i className="legend-coral" />较满</span><span><i className="legend-nearby" />附近</span><span><i className="legend-store" />便利店</span><b>刚刚更新</b></div>
+          <div className="map-zoom-controls" role="group" aria-label={`地图缩放 ${Math.round(mapZoom * 100)}%`}>
+            <button onClick={() => adjustMapZoom(.25)} disabled={mapZoom >= 1.8} aria-label="放大地图">＋</button>
+            <button className="zoom-reset" onClick={() => setMapZoom(1)} disabled={mapZoom === 1} aria-label="恢复地图默认大小">{Math.round(mapZoom * 100)}%</button>
+            <button onClick={() => adjustMapZoom(-.25)} disabled={mapZoom <= .75} aria-label="缩小地图">−</button>
+          </div>
+          {navigationMode && <span className={`navigation-status navigation-status-overlay mode-${activeMode.kind}`} role="status" aria-live="polite"><i /> {activeMode.kind === "walk" ? "街区步行" : activeMode.kind === "metro" ? "地铁接驳" : activeMode.kind === "drive" ? "驾车路线" : "骑行路线"} · {activeMode.label}</span>}
           <button className="climate-pill" onClick={() => flash(`${seasonalMood.term}气候图层 · ${seasonalMood.climate}`)} aria-label={`当前节气 ${seasonalMood.term}，${seasonalMood.climate}`}>
             <span>{seasonalMood.glyph}</span><b>{seasonalMood.term}</b><small>{seasonalMood.climate}</small>
           </button>
