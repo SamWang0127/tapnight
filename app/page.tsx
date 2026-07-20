@@ -14,6 +14,9 @@ type DetailPage =
   | { kind: "review" }
   | { kind: "badges" }
   | { kind: "verify" }
+  | { kind: "verifyApply" }
+  | { kind: "studio" }
+  | { kind: "barEditor" }
   | { kind: "city" };
 type MapPoint = { label: string; left: string; top: string };
 type MapSegment = { left: string; top: string; width: string; rotate: number };
@@ -25,6 +28,23 @@ type BarTravelGuide = {
   segments: MapSegment[];
   modes: TravelMode[];
 };
+type GeoPoint = { latitude: number; longitude: number; accuracy: number };
+type GpsStatus = "idle" | "locating" | "ready" | "denied";
+
+function distanceInMeters(from: Pick<GeoPoint, "latitude" | "longitude">, to: { lat: number; lon: number }) {
+  const earthRadius = 6_371_000;
+  const radians = (value: number) => value * Math.PI / 180;
+  const latitudeDelta = radians(to.lat - from.latitude);
+  const longitudeDelta = radians(to.lon - from.longitude);
+  const a = Math.sin(latitudeDelta / 2) ** 2 + Math.cos(radians(from.latitude)) * Math.cos(radians(to.lat)) * Math.sin(longitudeDelta / 2) ** 2;
+  return earthRadius * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function mapPositionForLocation(location: GeoPoint) {
+  const left = Math.min(92, Math.max(8, ((location.longitude - 121.425) / .045) * 84 + 8));
+  const top = Math.min(82, Math.max(18, ((31.245 - location.latitude) / .035) * 64 + 18));
+  return { left: `${left}%`, top: `${top}%` };
+}
 
 const solarTerms = [
   ["小寒", "大寒", 20], ["立春", "雨水", 19], ["惊蛰", "春分", 20], ["清明", "谷雨", 20],
@@ -48,15 +68,15 @@ function getSeasonalMood(now = new Date()): SeasonalMood {
 }
 
 const bars = [
-  { id: 1, name: "Archive Room", logo: "AR", logoClass: "logo-archive", area: "陕西北路", crowd: 62, wait: "可直接入座", tone: "mint", left: "27%", top: "57%", tags: ["安静", "威士忌", "有猫"] },
-  { id: 2, name: "NO. 17", logo: "17", logoClass: "logo-no17", area: "巨鹿路", crowd: 88, wait: "约等 15 分钟", tone: "coral", left: "57%", top: "39%", tags: ["热闹", "酸感", "新酒单"] },
-  { id: 3, name: "Moss", logo: "M", logoClass: "logo-moss", area: "武定路", crowd: 36, wait: "座位充足", tone: "mint", left: "77%", top: "56%", tags: ["植物感", "金酒", "露台"] },
+  { id: 1, name: "Archive Room", logo: "AR", logoClass: "logo-archive", area: "陕西北路", crowd: 62, wait: "可直接入座", tone: "mint", left: "27%", top: "57%", lat: 31.2345, lon: 121.4542, tags: ["安静", "威士忌", "有猫"] },
+  { id: 2, name: "NO. 17", logo: "17", logoClass: "logo-no17", area: "巨鹿路", crowd: 88, wait: "约等 15 分钟", tone: "coral", left: "57%", top: "39%", lat: 31.2199, lon: 121.4558, tags: ["热闹", "酸感", "新酒单"] },
+  { id: 3, name: "Moss", logo: "M", logoClass: "logo-moss", area: "武定路", crowd: 36, wait: "座位充足", tone: "mint", left: "77%", top: "56%", lat: 31.2368, lon: 121.4451, tags: ["植物感", "金酒", "露台"] },
 ];
 
 const nearbyBars = [
-  { id: 4, name: "ECHO", logo: "E", logoClass: "logo-nearby", area: "愚园路", crowd: 48, wait: "可直接入座", tone: "mint", left: "16%", top: "32%", tags: ["附近", "自然酒", "轻音乐"] },
-  { id: 5, name: "FABLE", logo: "F", logoClass: "logo-nearby", area: "富民路", crowd: 71, wait: "少量空位", tone: "coral", left: "42%", top: "50%", tags: ["附近", "经典鸡尾酒", "吧台"] },
-  { id: 6, name: "HUSH", logo: "H", logoClass: "logo-nearby", area: "常熟路", crowd: 39, wait: "座位充足", tone: "mint", left: "89%", top: "42%", tags: ["附近", "安静", "低酒精"] },
+  { id: 4, name: "ECHO", logo: "E", logoClass: "logo-nearby", area: "愚园路", crowd: 48, wait: "可直接入座", tone: "mint", left: "16%", top: "32%", lat: 31.2235, lon: 121.4338, tags: ["附近", "自然酒", "轻音乐"] },
+  { id: 5, name: "FABLE", logo: "F", logoClass: "logo-nearby", area: "富民路", crowd: 71, wait: "少量空位", tone: "coral", left: "42%", top: "50%", lat: 31.2183, lon: 121.452, tags: ["附近", "经典鸡尾酒", "吧台"] },
+  { id: 6, name: "HUSH", logo: "H", logoClass: "logo-nearby", area: "常熟路", crowd: 39, wait: "座位充足", tone: "mint", left: "89%", top: "42%", lat: 31.2149, lon: 121.4489, tags: ["附近", "安静", "低酒精"] },
 ];
 
 const barTravelGuides: Record<number, BarTravelGuide> = {
@@ -180,6 +200,10 @@ export default function Home() {
   const [selectedBar, setSelectedBar] = useState(bars[0]);
   const [nfcOpen, setNfcOpen] = useState(false);
   const [nfcDone, setNfcDone] = useState(false);
+  const [gpsStatus, setGpsStatus] = useState<GpsStatus>("idle");
+  const [currentLocation, setCurrentLocation] = useState<GeoPoint | null>(null);
+  const [geofenceOpen, setGeofenceOpen] = useState(false);
+  const [geofenceDistance, setGeofenceDistance] = useState<number | null>(null);
   const [plannerOpen, setPlannerOpen] = useState(false);
   const [toast, setToast] = useState("");
   const [routeLikes, setRouteLikes] = useState(326);
@@ -220,9 +244,74 @@ export default function Home() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const requestGps = () => new Promise<GeoPoint | null>((resolve) => {
+    if (!navigator.geolocation) {
+      setGpsStatus("denied");
+      resolve(null);
+      return;
+    }
+    setGpsStatus("locating");
+    navigator.geolocation.getCurrentPosition((position) => {
+      const point = {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        accuracy: position.coords.accuracy,
+      };
+      setCurrentLocation(point);
+      setGpsStatus("ready");
+      resolve(point);
+    }, () => {
+      setGpsStatus("denied");
+      resolve(null);
+    }, { enableHighAccuracy: true, timeout: 10_000, maximumAge: 15_000 });
+  });
+
+  const evaluateGeofence = (location: GeoPoint | null) => {
+    if (!location) {
+      setGeofenceDistance(null);
+      setGeofenceOpen(true);
+      return false;
+    }
+    const distance = Math.round(distanceInMeters(location, selectedBar));
+    setGeofenceDistance(distance);
+    if (distance > 20) {
+      setGeofenceOpen(true);
+      return false;
+    }
+    setGeofenceOpen(false);
+    setNfcDone(false);
+    setNfcOpen(true);
+    return true;
+  };
+
+  const openNfcWithGeofence = async () => {
+    const location = currentLocation || await requestGps();
+    evaluateGeofence(location);
+  };
+
+  const retryGeofence = async () => {
+    const location = await requestGps();
+    evaluateGeofence(location);
+  };
+
+  const simulateInsideSelectedBar = () => {
+    const location = { latitude: selectedBar.lat + .00004, longitude: selectedBar.lon, accuracy: 5 };
+    setCurrentLocation(location);
+    setGpsStatus("ready");
+    setGeofenceDistance(Math.round(distanceInMeters(location, selectedBar)));
+    setGeofenceOpen(false);
+    setNfcDone(false);
+    setNfcOpen(true);
+  };
+
   const handleNfc = () => {
+    if (!currentLocation || distanceInMeters(currentLocation, selectedBar) > 20) {
+      setNfcOpen(false);
+      evaluateGeofence(currentLocation);
+      return;
+    }
     setNfcDone(true);
-    flash(`${selectedBar.name} 到店成功 · 正在打开本店酒单`);
+    flash(`${selectedBar.name} · GPS 20 米内验证成功`);
     window.setTimeout(() => {
       setNfcOpen(false);
       changeTab("menu");
@@ -285,7 +374,15 @@ export default function Home() {
           <HomeView
             selectedBar={selectedBar}
             setSelectedBar={setSelectedBar}
-            onNfc={() => { setNfcDone(false); setNfcOpen(true); }}
+            onNfc={openNfcWithGeofence}
+            gpsStatus={gpsStatus}
+            currentLocation={currentLocation}
+            distanceToSelectedBar={currentLocation ? Math.round(distanceInMeters(currentLocation, selectedBar)) : null}
+            onLocate={async () => {
+              const location = await requestGps();
+              if (location) flash(`GPS 已更新 · 精度约 ${Math.round(location.accuracy)} 米`);
+              else flash("无法取得定位，请检查浏览器定位权限");
+            }}
             onPlanner={() => setPlannerOpen(true)}
             onRoutes={() => changeTab("routes")}
             onMenu={() => changeTab("menu")}
@@ -304,12 +401,12 @@ export default function Home() {
             onLike={handleLike}
             onDown={handleDown}
             onShare={() => { navigator.clipboard?.writeText(window.location.href); flash("分享链接已复制"); }}
-            onNfc={() => { setNfcDone(false); setNfcOpen(true); }}
+            onNfc={openNfcWithGeofence}
             onOpenBar={(barId) => openDetail({ kind: "bar", barId })}
             onOpenDetail={openDetail}
           />
         )}
-        {!detailPage && tab === "menu" && <MenuView selectedBar={selectedBar} onSelectBar={setSelectedBar} ratedDrinks={ratedDrinks} onRate={rateDrink} />}
+        {!detailPage && tab === "menu" && <MenuView selectedBar={selectedBar} onSelectBar={setSelectedBar} ratedDrinks={ratedDrinks} onRate={rateDrink} onNotify={flash} />}
         {!detailPage && tab === "community" && <CommunityPage
           personality={drinkPersonality}
           onGreet={(name) => flash(`已向 ${name} 发出一个轻松的招呼`)}
@@ -337,12 +434,12 @@ export default function Home() {
               <>
                 <p className="eyebrow">NFC CHECK-IN</p>
                 <h2 id="nfc-title">碰一下，开始今晚。</h2>
-                <p className="modal-copy">手机靠近店内的 TapNight 感应牌，无需打开 App。原型中可点击下方模拟。</p>
+                <p className="modal-copy">GPS 已确认你在 {selectedBar.name} 20 米范围内。现在将手机靠近店内感应牌。</p>
                 <button className="nfc-orb" onClick={handleNfc} aria-label="模拟 NFC 碰一下">
                   <span>TapNight</span><small>靠近感应</small>
                 </button>
-                <button className="primary-button full" onClick={handleNfc}>模拟碰一下</button>
-                <p className="privacy-note">仅记录门店、时间和匿名设备凭证 · 可随时删除</p>
+                <button className="primary-button full" onClick={handleNfc}>Developer · 模拟碰一下</button>
+                <p className="privacy-note">GPS 仅用于本次 20 米到店校验 · 不保存连续轨迹</p>
               </>
             ) : (
               <div className="checkin-success">
@@ -355,6 +452,24 @@ export default function Home() {
                 <button className="text-button" onClick={() => setNfcOpen(false)}>稍后再说</button>
               </div>
             )}
+          </section>
+        </div>
+      )}
+
+      {geofenceOpen && (
+        <div className="modal-backdrop" role="presentation" onMouseDown={() => setGeofenceOpen(false)}>
+          <section className="geofence-modal" role="dialog" aria-modal="true" aria-labelledby="geofence-title" onMouseDown={(event) => event.stopPropagation()}>
+            <button className="modal-close" aria-label="关闭" onClick={() => setGeofenceOpen(false)}>×</button>
+            <p className="eyebrow">GPS · 20 M GEOFENCE</p>
+            <h2 id="geofence-title">需要在店内才能打卡。</h2>
+            <div className={`geofence-radar ${geofenceDistance !== null && geofenceDistance <= 20 ? "inside" : ""}`}><i /><span>20m</span><b>你</b></div>
+            <div className="geofence-reading">
+              <span>目标门店</span><b>{selectedBar.name}</b>
+              <small>{geofenceDistance === null ? "尚未取得定位权限" : `当前距离约 ${geofenceDistance.toLocaleString()} 米 · 需 ≤ 20 米`}</small>
+            </div>
+            <button className="primary-button full" onClick={retryGeofence}>{gpsStatus === "locating" ? "正在获取 GPS…" : "重新定位"}</button>
+            <button className="developer-location-button" onClick={simulateInsideSelectedBar}>Developer 测试 · 模拟进入 20 米</button>
+            <p className="privacy-note">正式版只会在碰一下时读取一次定位；模拟入口上线前移除。</p>
           </section>
         </div>
       )}
@@ -385,10 +500,14 @@ export default function Home() {
   );
 }
 
-function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onMenu, onBarDetail, flash, seasonalMood }: {
+function HomeView({ selectedBar, setSelectedBar, onNfc, gpsStatus, currentLocation, distanceToSelectedBar, onLocate, onPlanner, onRoutes, onMenu, onBarDetail, flash, seasonalMood }: {
   selectedBar: typeof bars[number];
   setSelectedBar: (bar: typeof bars[number]) => void;
   onNfc: () => void;
+  gpsStatus: GpsStatus;
+  currentLocation: GeoPoint | null;
+  distanceToSelectedBar: number | null;
+  onLocate: () => void;
   onPlanner: () => void;
   onRoutes: () => void;
   onMenu: () => void;
@@ -532,6 +651,7 @@ function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onM
           <div className="led-track track-one" aria-hidden="true"><i /></div>
           <div className="led-track track-two" aria-hidden="true"><i /></div>
           <div className="route-live-label"><i /> 推荐值越高 · 光流越快</div>
+          {currentLocation && <div className="user-location-pin" style={mapPositionForLocation(currentLocation)} aria-label={`你的位置，精度约 ${Math.round(currentLocation.accuracy)} 米`}><i /><span>你在这里</span></div>}
           {navigationMode && (
             <div className={`map-navigation mode-${activeMode.kind}`} aria-label={`${selectedTravel.route}，${activeMode.label}，指路中`}>
               {activeNavigationSegments.map((segment, index) => (
@@ -590,6 +710,10 @@ function HomeView({ selectedBar, setSelectedBar, onNfc, onPlanner, onRoutes, onM
           {navigationMode && <span className={`navigation-status navigation-status-overlay mode-${activeMode.kind}`} role="status" aria-live="polite"><i /> {activeMode.kind === "walk" ? "街区步行" : activeMode.kind === "metro" ? "地铁接驳" : activeMode.kind === "drive" ? "驾车路线" : "骑行路线"} · {activeMode.label}</span>}
           <button className="climate-pill" onClick={() => flash(`${seasonalMood.term}气候图层 · ${seasonalMood.climate}`)} aria-label={`当前节气 ${seasonalMood.term}，${seasonalMood.climate}`}>
             <span>{seasonalMood.glyph}</span><b>{seasonalMood.term}</b><small>{seasonalMood.climate}</small>
+          </button>
+          <button className={`gps-pill gps-${gpsStatus}`} onClick={onLocate} aria-label="更新 GPS 定位">
+            <span>⌖</span><b>{gpsStatus === "locating" ? "定位中" : gpsStatus === "ready" ? "GPS 已定位" : gpsStatus === "denied" ? "定位未开启" : "开启 GPS"}</b>
+            <small>{distanceToSelectedBar === null ? "20m 打卡校验" : `距店 ${distanceToSelectedBar.toLocaleString()}m`}</small>
           </button>
           <button className="nfc-fab" onClick={onNfc}><span>⌁</span><b>碰一下打卡</b><small>无需打开 App</small></button>
           <article className="map-bar-card">
@@ -788,11 +912,15 @@ function DetailPageView({ page, onBack, onOpen, onMenuForBar, onRoutes, flash }:
 }) {
   const [reviewText, setReviewText] = useState("");
   const [reviewScore, setReviewScore] = useState(5);
+  const [verifyInfoOpen, setVerifyInfoOpen] = useState(false);
+  const [studioDrink, setStudioDrink] = useState("青梅雨");
+  const [studioPublished, setStudioPublished] = useState(true);
+  const [barIntro, setBarIntro] = useState("藏在陕西北路老建筑二层的安静酒吧。擅长威士忌、草本与低酒精创作，吧台旁偶尔会有邻居家的猫来访。");
   const allBars = [...bars, ...nearbyBars];
   const detailBar = page.kind === "bar" ? allBars.find((bar) => bar.id === page.barId) || bars[0] : bars[0];
 
   const detailTitles: Record<DetailPage["kind"], string> = {
-    bar: "酒吧详情", brand: "品牌一日", bartender: "调酒师采访", routes: "路线库", review: "路线评价", badges: "勋章图鉴", verify: "调酒师认证", city: "城市热力",
+    bar: "酒吧详情", brand: "品牌一日", bartender: "调酒师采访", routes: "路线库", review: "路线评价", badges: "勋章图鉴", verify: "调酒师认证", verifyApply: "认证申请", studio: "酒单工作台", barEditor: "酒吧介绍", city: "城市热力",
   };
 
   return (
@@ -875,7 +1003,45 @@ function DetailPageView({ page, onBack, onOpen, onMenuForBar, onRoutes, flash }:
         <>
           <section className="detail-hero verify-detail-hero"><div className="verify-mark">B+</div><div><p>BARTENDER VERIFICATION</p><h2>成为认证调酒师。</h2><span>认证后可维护酒单、接受采访并发布推荐路线</span></div></section>
           <section className="verify-steps">{[["01", "身份与从业信息", "姓名、所在门店与从业年限"], ["02", "门店或同行证明", "上传在职证明或邀请一位已认证同行"], ["03", "人工审核", "通常会在 2 个工作日内完成"]].map((step) => <article key={step[0]}><span>{step[0]}</span><div><b>{step[1]}</b><small>{step[2]}</small></div><i>✓</i></article>)}</section>
-          <footer className="detail-actions"><button onClick={() => flash("认证说明已保存")}>先看看说明</button><button className="detail-primary" onClick={() => flash("认证申请已开始，可稍后继续")}>开始认证 →</button></footer>
+          <footer className="detail-actions"><button onClick={() => setVerifyInfoOpen(true)}>先看看说明</button><button className="detail-primary" onClick={() => onOpen({ kind: "verifyApply" })}>开始认证 →</button></footer>
+        </>
+      )}
+
+      {page.kind === "verifyApply" && (
+        <>
+          <section className="detail-hero verify-apply-hero"><div><p>STEP 01 · PROFILE</p><h2>让我们确认你的从业身份。</h2><span>资料仅用于人工审核，不会展示在公开主页</span></div><b>1/3</b></section>
+          <section className="verify-application-form">
+            <label><span>真实姓名</span><input defaultValue="林野" /></label>
+            <label><span>从业门店</span><input defaultValue="Archive Room" /></label>
+            <label><span>从业年限</span><select defaultValue="5"><option value="1">1–2 年</option><option value="3">3–4 年</option><option value="5">5 年以上</option></select></label>
+            <button className="verify-upload" onClick={() => flash("证明文件已选择 · Developer 模拟")}><i>＋</i><span><b>上传门店或同行证明</b><small>工作证、排班证明或认证同行邀请</small></span><em>选择文件</em></button>
+            <label className="verify-consent"><input type="checkbox" defaultChecked /><span>我确认资料真实，并同意仅用于 TapNight 调酒师认证审核。</span></label>
+          </section>
+          <footer className="detail-actions"><button onClick={() => onOpen({ kind: "verify" })}>返回认证首页</button><button className="detail-primary" onClick={() => { flash("Developer：认证通过，已打开酒单工作台"); onOpen({ kind: "studio" }); }}>提交并预览认证后界面 →</button></footer>
+        </>
+      )}
+
+      {page.kind === "studio" && (
+        <>
+          <section className="detail-hero studio-hero"><div><p>VERIFIED · ARCHIVE ROOM</p><h2>今晚的酒单，由你维护。</h2><span>林野 · 已认证调酒师 B+</span></div><aside><i />{studioPublished ? "线上酒单已发布" : "当前为草稿"}<small>更新于 2 min 前</small></aside></section>
+          <section className="studio-grid">
+            <article className="studio-menu-panel"><header><div><p className="eyebrow">SUMMER 2026</p><h3>本季酒单 · 4 杯</h3></div><button onClick={() => flash("已新建一杯空白酒款")}>＋ 新增酒款</button></header>{venueDrinkMenus["Archive Room"].map((drink, index) => <button className={studioDrink === drink.name ? "active" : ""} onClick={() => setStudioDrink(drink.name)} key={drink.name}><span style={{ background: drink.color }}>{String(index + 1).padStart(2, "0")}</span><div><b>{drink.name}</b><small>{drink.formula}</small></div><em>¥{drink.price}</em><i>编辑</i></button>)}</article>
+            <aside className="studio-side-panel"><article><p className="eyebrow">SELECTED DRINK</p><h3>{studioDrink}</h3><div className="studio-field"><span>公开标签</span><b>#酸甜　#草本　#低酒精</b></div><div className="studio-field"><span>状态</span><b>酒单中 · 可供应</b></div><button onClick={() => flash(`「${studioDrink}」编辑器已打开`)}>编辑配方与标签 →</button></article><article><p className="eyebrow">VENUE PROFILE</p><h3>Archive Room</h3><span>酒吧介绍、营业时间、氛围与设施</span><button onClick={() => onOpen({ kind: "barEditor" })}>添加 / 编辑酒吧介绍 →</button></article></aside>
+          </section>
+          <footer className="detail-actions"><button onClick={() => onOpen({ kind: "barEditor" })}>维护酒吧介绍</button><button className="detail-primary" onClick={() => { setStudioPublished(true); flash("2026 夏季酒单已发布"); }}>发布本季酒单 →</button></footer>
+        </>
+      )}
+
+      {page.kind === "barEditor" && (
+        <>
+          <section className="detail-hero bar-editor-hero"><div><p>VENUE PROFILE · ARCHIVE ROOM</p><h2>先让大家认识这家店。</h2><span>认证调酒师与门店管理员可共同维护</span></div><b>AR</b></section>
+          <section className="bar-editor-form">
+            <div className="bar-editor-row"><label><span>酒吧名称</span><input defaultValue="Archive Room" /></label><label><span>所在区域</span><input defaultValue="静安区 · 陕西北路" /></label></div>
+            <label><span>一句话介绍</span><input defaultValue="安静喝一杯，也许会遇见猫。" maxLength={30} /></label>
+            <label className="bar-intro-field"><span>完整介绍</span><textarea value={barIntro} onChange={(event) => setBarIntro(event.target.value)} maxLength={240} /><small>{barIntro.length} / 240</small></label>
+            <div className="bar-amenities"><span>门店特点</span>{["安静吧台", "威士忌", "低酒精", "可独饮", "偶尔有猫", "近地铁"].map((item, index) => <button className={index < 5 ? "active" : ""} key={item}>#{item}</button>)}</div>
+          </section>
+          <footer className="detail-actions"><button onClick={() => onOpen({ kind: "studio" })}>返回酒单工作台</button><button className="detail-primary" onClick={() => { flash("酒吧介绍已保存并提交审核"); onOpen({ kind: "studio" }); }}>保存酒吧介绍 →</button></footer>
         </>
       )}
 
@@ -886,39 +1052,83 @@ function DetailPageView({ page, onBack, onOpen, onMenuForBar, onRoutes, flash }:
           <section className="detail-card city-note"><p className="eyebrow">DATA NOTE</p><h3>实时，但不制造催促。</h3><p>热力只表示当前到店密度，不鼓励过量饮酒。离店后的匿名设备凭证会自动失效。</p></section>
         </>
       )}
+
+      {verifyInfoOpen && (
+        <div className="modal-backdrop verify-info-backdrop" role="presentation" onMouseDown={() => setVerifyInfoOpen(false)}>
+          <section className="verify-info-modal" role="dialog" aria-modal="true" aria-labelledby="verify-info-title" onMouseDown={(event) => event.stopPropagation()}>
+            <button className="modal-close" aria-label="关闭" onClick={() => setVerifyInfoOpen(false)}>×</button>
+            <p className="eyebrow">BEFORE YOU START</p><h2 id="verify-info-title">调酒师认证说明</h2>
+            <div className="verify-info-list"><article><b>谁可以申请</b><span>现职调酒师、酒吧主理人，以及有可验证从业经历的行业人员。</span></article><article><b>需要准备</b><span>姓名、所在门店、从业年限，以及工作证 / 排班证明 / 已认证同行邀请之一。</span></article><article><b>审核与权限</b><span>通常 2 个工作日。通过后可维护门店酒单、酒吧介绍并发布调酒师推荐路线。</span></article><article><b>隐私与撤回</b><span>身份材料仅用于审核，不会公开；提交前可随时退出，认证后也可申请注销。</span></article></div>
+            <button className="primary-button full" onClick={() => setVerifyInfoOpen(false)}>我知道了</button>
+          </section>
+        </div>
+      )}
     </div>
   );
 }
 
-function MenuView({ selectedBar, onSelectBar, ratedDrinks, onRate }: { selectedBar: typeof bars[number]; onSelectBar: (bar: typeof bars[number]) => void; ratedDrinks: string[]; onRate: (name: string) => void }) {
+function MenuView({ selectedBar, onSelectBar, ratedDrinks, onRate, onNotify }: { selectedBar: typeof bars[number]; onSelectBar: (bar: typeof bars[number]) => void; ratedDrinks: string[]; onRate: (name: string) => void; onNotify: (message: string) => void }) {
   const [filter, setFilter] = useState("全部");
+  const [tagOpen, setTagOpen] = useState(false);
+  const [tagDrink, setTagDrink] = useState("");
+  const [tagDraft, setTagDraft] = useState("");
+  const [customDrinkTags, setCustomDrinkTags] = useState<Record<string, string[]>>({});
   const menuBars = [...bars, ...nearbyBars];
   const activeMenu = venueDrinkMenus[selectedBar.name] || venueDrinkMenus["Archive Room"];
-  const availableTags = ["全部", ...Array.from(new Set(activeMenu.flatMap((drink) => drink.tags)))].slice(0, 6);
-  const visible = filter === "全部" ? activeMenu : activeMenu.filter((drink) => drink.tags.includes(filter));
+  const availableTags = ["全部", ...Array.from(new Set(activeMenu.flatMap((drink) => [...drink.tags, ...(customDrinkTags[drink.name] || [])])))].slice(0, 8);
+  const visible = filter === "全部" ? activeMenu : activeMenu.filter((drink) => [...drink.tags, ...(customDrinkTags[drink.name] || [])].includes(filter));
+  const suggestedTags = ["适合第一杯", "咸鲜", "约会", "拍照好看", "酒感轻", "隐藏款"];
 
-  useEffect(() => setFilter("全部"), [selectedBar.id]);
+  useEffect(() => {
+    setFilter("全部");
+    setTagDrink((venueDrinkMenus[selectedBar.name] || venueDrinkMenus["Archive Room"])[0].name);
+    setTagDraft("");
+  }, [selectedBar.id, selectedBar.name]);
+
+  function saveCustomTag() {
+    const tag = tagDraft.trim().replace(/^#/, "").slice(0, 12);
+    if (!tag || !tagDrink) return;
+    setCustomDrinkTags((current) => ({ ...current, [tagDrink]: Array.from(new Set([...(current[tagDrink] || []), tag])) }));
+    setTagDraft("");
+    setTagOpen(false);
+    onNotify(`#${tag} 已贴到「${tagDrink}」`);
+  }
 
   return (
     <div className="menu-page">
       <section className="menu-frame" aria-label={`${selectedBar.name} 完整季节酒单`}>
         <section className="menu-hero">
           <div><p className="eyebrow">NFC MENU · 当前到店</p><h2>{selectedBar.name}</h2><p>{selectedBar.area} · 碰一碰后自动定位本店酒单。每杯都有配方、风味与喝过的人的标签。</p><span className="menu-checkin-chip"><i /> 已定位本店 · 客流 {selectedBar.crowd}%</span></div>
-          <div className="menu-count"><b>{String(activeMenu.length).padStart(2, "0")}</b><span>杯本季精选</span><small>2026 夏季酒单</small><button>＋ 自定义标签</button></div>
+          <div className="menu-count"><b>{String(activeMenu.length).padStart(2, "0")}</b><span>杯本季精选</span><small>2026 夏季酒单</small><button onClick={() => { setTagDrink(activeMenu[0].name); setTagOpen(true); }}>＋ 自定义标签</button></div>
         </section>
         <div className="menu-filter-stack">
           <div className="filter-row venue-filter-row" aria-label="切换酒吧"><span>酒吧</span>{menuBars.map((bar) => <button key={bar.id} className={`venue-filter ${selectedBar.id === bar.id ? "active" : ""}`} onClick={() => onSelectBar(bar)}>{bar.name}</button>)}</div>
           <div className="filter-row taste-filter-row" aria-label="按口味筛选"><span>口味</span>{availableTags.map((item) => <button key={item} className={`taste-filter ${filter === item ? "active" : ""}`} onClick={() => setFilter(item)}>{item}</button>)}</div>
         </div>
         <section className="drink-grid">
-          {visible.map((drink, index) => (
-            <article className="drink-card" key={drink.name}>
+          {visible.map((drink, index) => {
+            const displayTags = Array.from(new Set([...drink.tags, ...(customDrinkTags[drink.name] || [])]));
+            return <article className="drink-card" key={drink.name}>
               <div className="drink-card-art" style={{ "--drink-color": drink.color } as React.CSSProperties}><span className="drink-photo-frame"><span className="glass"><i /></span></span><b>0{index + 1}</b></div>
-              <div className="drink-card-copy"><p>{drink.bar}</p><div className="drink-title"><h2>{drink.name}<small>{drink.english}</small></h2><b>¥{drink.price}</b></div><p className="formula">{drink.formula}</p><div className="inline-tags">{drink.tags.map((tag) => <span key={tag}>{tag}</span>)}</div><div className="taste-profile"><label>酸度 <i><em style={{ width: `${drink.taste[0]}%` }} /></i></label><label>香气 <i><em style={{ width: `${drink.taste[1]}%` }} /></i></label><label>酒感 <i><em style={{ width: `${drink.taste[2]}%` }} /></i></label></div><footer><span><b>4.{8 - index}</b> · {126 - index * 17} 人喝过</span><button className={ratedDrinks.includes(drink.name) ? "done" : ""} onClick={() => onRate(drink.name)}>{ratedDrinks.includes(drink.name) ? "✓ 已喝过" : "＋ 今天喝过"}</button></footer></div>
+              <div className="drink-card-copy"><p>{drink.bar}</p><div className="drink-title"><h2>{drink.name}<small>{drink.english}</small></h2><b>¥{drink.price}</b></div><p className="formula">{drink.formula}</p><div className="inline-tags">{displayTags.map((tag) => <span className={(customDrinkTags[drink.name] || []).includes(tag) ? "custom" : ""} key={tag}>{tag}</span>)}</div><div className="taste-profile"><label>酸度 <i><em style={{ width: `${drink.taste[0]}%` }} /></i></label><label>香气 <i><em style={{ width: `${drink.taste[1]}%` }} /></i></label><label>酒感 <i><em style={{ width: `${drink.taste[2]}%` }} /></i></label></div><footer><span><b>4.{8 - index}</b> · {126 - index * 17} 人喝过</span><button className={ratedDrinks.includes(drink.name) ? "done" : ""} onClick={() => onRate(drink.name)}>{ratedDrinks.includes(drink.name) ? "✓ 已喝过" : "＋ 今天喝过"}</button></footer></div>
             </article>
-          ))}
+          })}
         </section>
       </section>
+      {tagOpen && (
+        <div className="modal-backdrop" role="presentation" onMouseDown={() => setTagOpen(false)}>
+          <section className="tag-modal" role="dialog" aria-modal="true" aria-labelledby="tag-modal-title" onMouseDown={(event) => event.stopPropagation()}>
+            <button className="modal-close" aria-label="关闭" onClick={() => setTagOpen(false)}>×</button>
+            <p className="eyebrow">COMMUNITY TAG</p><h2 id="tag-modal-title">这杯酒，给你什么感觉？</h2>
+            <p className="modal-copy">先选一杯，再用推荐标签或写下自己的词。相同标签达到门槛后会成为酒吧公开筛选项。</p>
+            <div className="tag-drink-picker">{activeMenu.map((drink) => <button className={tagDrink === drink.name ? "active" : ""} onClick={() => setTagDrink(drink.name)} key={drink.name}><i style={{ background: drink.color }} />{drink.name}</button>)}</div>
+            <div className="tag-suggestions">{suggestedTags.map((tag) => <button className={tagDraft === tag ? "active" : ""} onClick={() => setTagDraft(tag)} key={tag}>#{tag}</button>)}</div>
+            <label className="tag-input"><span>#</span><input autoFocus maxLength={12} value={tagDraft} onChange={(event) => setTagDraft(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") saveCustomTag(); }} placeholder="自定义标签，最多 12 字" /></label>
+            <button className="primary-button full" disabled={!tagDraft.trim()} onClick={saveCustomTag}>保存到「{tagDrink}」</button>
+            <p className="privacy-note">标签会公开显示；此 Developer 版本先保存在当前会话。</p>
+          </section>
+        </div>
+      )}
     </div>
   );
 }
