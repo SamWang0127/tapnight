@@ -526,3 +526,14 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--mint-deep);
   .home-secondary-rail .tonight-actions .primary-button { width: 100%; min-height: 34px; margin: 0; padding-inline: 8px; }
   .home-secondary-rail .tonight-actions .text-button { display: block; min-height: 34px; padding: 5px 6px; border: 1px solid rgba(22,25,23,.1); font-size: 6px; line-height: 1.25; }
 }
+
+/* Give the verification chip its own row clearance before the profile divider. */
+@media (max-width: 900px) {
+  .profile-page .profile-hero { row-gap: 24px; }
+  .profile-page .profile-verify-chip { display: inline-flex; align-items: center; justify-content: center; min-height: 30px; margin: 12px 0 2px; line-height: 1; white-space: nowrap; }
+}
+@media (max-width: 620px) {
+  .profile-page { grid-template-rows: 218px minmax(0,1fr); }
+  .profile-page .profile-hero { padding-bottom: 10px; grid-template-rows: minmax(128px,1fr) 50px; row-gap: 10px; }
+  .profile-page .profile-verify-chip { min-height: 24px; margin: 6px 0 8px; padding: 5px 8px; }
+}
