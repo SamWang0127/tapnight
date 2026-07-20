@@ -598,3 +598,21 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--mint-deep);
   .profile-page .frequent-row { min-height: 38px; padding-block: 4px; }
   .profile-page .history-row { min-height: 56px; padding-block: 5px; }
 }
+
+/* Keep the complete tag-based route recommender inside the discovery frame. */
+@media (max-width: 700px) {
+  .home-secondary-rail > .tonight-panel { padding: 6px 8px; }
+  .home-secondary-rail .consensus-filter { height: 40px; margin-bottom: 3px; padding: 4px; }
+  .home-secondary-rail .consensus-filter > header { display: none; }
+  .home-secondary-rail .consensus-tags { height: 32px; }
+  .home-secondary-rail .discover-newbar-card { height: 27px; min-height: 27px; margin-bottom: 3px; padding: 3px 6px; }
+  .home-secondary-rail .route-preview { height: 28px; }
+  .home-secondary-rail .route-stop { min-height: 28px; padding: 3px 5px; }
+  .home-secondary-rail .route-stop em { margin-top: 1px; font-size: 5px; }
+}
+
+/* Inactive module labels stay legible on the dark glass navigation. */
+@media (max-width: 900px) {
+  .mobile-nav button:not(.active) { color: rgba(245,249,246,.78); font-weight: 650; text-shadow: 0 1px 6px rgba(0,0,0,.82); }
+  .mobile-nav button:not(.active) span { color: rgba(235,244,239,.9); }
+}
