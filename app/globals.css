@@ -568,3 +568,20 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--mint-deep);
   .travel-modes button { min-height: 18px; padding: 1px 3px; font-size: 4px; }
   .travel-modes i { width: 11px; height: 11px; margin-right: 2px; font-size: 4px; }
 }
+
+/* Translucent reference layers keep bars visible underneath on compact maps. */
+@media (max-width: 900px) {
+  .climate-pill, .gps-pill, .map-legend { border-color: rgba(255,255,255,.42); background: rgba(247,249,244,.46); -webkit-backdrop-filter: blur(9px) saturate(1.15); backdrop-filter: blur(9px) saturate(1.15); box-shadow: 0 5px 14px rgba(22,25,23,.05); }
+  .nfc-fab { border: 1px solid rgba(255,255,255,.24); background: rgba(13,17,15,.58); -webkit-backdrop-filter: blur(12px) saturate(1.25); backdrop-filter: blur(12px) saturate(1.25); box-shadow: 0 7px 18px rgba(22,25,23,.12); }
+  .map-zoom-controls { background: rgba(10,14,12,.56); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+  .metro-stop { border-color: rgba(255,255,255,.44); background: rgba(247,249,244,.38); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); box-shadow: 0 4px 10px rgba(22,25,23,.05); }
+  .map-sign { border-color: rgba(255,255,255,.42); background: rgba(25,29,27,.46); -webkit-backdrop-filter: blur(7px); backdrop-filter: blur(7px); }
+  .map-landmark b, .nearby-bar-pin > b, .convenience-pin > b { border-color: rgba(255,255,255,.42); background: rgba(248,249,245,.42); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+  .map-bar-card { border-color: rgba(255,255,255,.48); background: rgba(251,251,247,.66); -webkit-backdrop-filter: blur(12px) saturate(1.15); backdrop-filter: blur(12px) saturate(1.15); }
+}
+@media (max-width: 620px) {
+  .climate-pill, .gps-pill, .map-legend { background: rgba(247,249,244,.36); }
+  .nfc-fab { background: rgba(13,17,15,.5); }
+  .metro-stop { background: rgba(247,249,244,.3); }
+  .map-bar-card { background: rgba(251,251,247,.58); }
+}
