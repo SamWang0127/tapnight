@@ -1,0 +1,18 @@
+{
+  "name": "TapNight",
+  "short_name": "TapNight",
+  "description": "实时酒吧热力、NFC 到店打卡、AI 喝酒路线与每季酒单。",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f2f3ed",
+  "theme_color": "#161917",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

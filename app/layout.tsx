@@ -12,6 +12,8 @@ export async function generateMetadata(): Promise<Metadata> {
     title: "TapNight｜碰一下，开始今晚",
     applicationName: "TapNight",
     description: "实时酒吧热力、NFC 到店打卡、AI 喝酒路线与每季酒单。",
+    manifest: "/manifest.webmanifest",
+    icons: { icon: "/favicon.svg" },
     appleWebApp: {
       capable: true,
       title: "TapNight",
