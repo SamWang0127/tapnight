@@ -514,3 +514,15 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--mint-deep);
   .routes-page .itinerary-stop > button { display: block; min-width: 30px; min-height: 30px; grid-column: 3; justify-self: end; margin-top: -30px; border: 0; background: transparent; font-size: 6px; }
   .profile-page .section-heading button { display: block; min-height: 24px; font-size: 6px; }.profile-page .frequent-row button, .profile-page .history-row button { display: block; min-width: 24px; min-height: 24px; border: 0; background: transparent; font-size: 7px; }
 }
+
+/* Keep the two discovery actions clear of the card edge and mobile navigation. */
+.tonight-actions { display: grid; gap: 4px; }
+@media (max-width: 900px) {
+  .home-secondary-rail .tonight-actions { padding-bottom: 18px; }
+  .home-secondary-rail .tonight-actions .text-button { min-height: 42px; padding: 8px 10px; border-radius: 10px; background: rgba(255,255,255,.26); }
+}
+@media (max-width: 620px) {
+  .home-secondary-rail .tonight-actions { width: 100%; margin-top: auto; padding: 0 0 3px; display: grid; grid-template-columns: minmax(0,1.15fr) minmax(0,.85fr); gap: 5px; }
+  .home-secondary-rail .tonight-actions .primary-button { width: 100%; min-height: 34px; margin: 0; padding-inline: 8px; }
+  .home-secondary-rail .tonight-actions .text-button { display: block; min-height: 34px; padding: 5px 6px; border: 1px solid rgba(22,25,23,.1); font-size: 6px; line-height: 1.25; }
+}

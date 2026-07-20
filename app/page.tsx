@@ -756,8 +756,10 @@ function HomeView({ selectedBar, setSelectedBar, onNfc, gpsStatus, currentLocati
           })}
         </div>
         <div className="route-summary"><div><b>{suggestedRouteBars.length}</b><span>站</span></div><div><b>{(1.2 + suggestedRouteBars.length * .85).toFixed(1)}</b><span>km</span></div><div><b>{communityFilters.length ? "LIVE" : "92%"}</b><span>{communityFilters.length ? "共识重排" : "合你口味"}</span></div></div>
-        <button className="primary-button full" onClick={onPlanner}>按我的感觉重新生成 <span>→</span></button>
-        <button className="text-button" onClick={onRoutes}>看看大家正在走的路线</button>
+        <div className="tonight-actions">
+          <button className="primary-button full" onClick={onPlanner}>按我的感觉重新生成 <span>→</span></button>
+          <button className="text-button" onClick={onRoutes}>看看大家正在走的路线</button>
+        </div>
       </aside>
       </div>
 
