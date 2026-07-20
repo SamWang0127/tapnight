@@ -589,3 +589,12 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--mint-deep);
   .metro-stop { background: rgba(247,249,244,.3); }
   .map-bar-card { background: rgba(251,251,247,.58); }
 }
+
+/* Fill compact page frames with content instead of spacer rows. */
+@media (max-width: 700px) {
+  .routes-page .itinerary-stop { min-height: 86px; }
+  .routes-page .stop-line b { height: 85px; }
+  .routes-page .review-card:nth-of-type(2) { display: block; }
+  .profile-page .frequent-row { min-height: 38px; padding-block: 4px; }
+  .profile-page .history-row { min-height: 56px; padding-block: 5px; }
+}
