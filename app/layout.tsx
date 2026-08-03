@@ -9,9 +9,9 @@ export async function generateMetadata(): Promise<Metadata> {
   const origin = `${protocol}://${host}`;
 
   return {
-    title: "TapNight｜碰一下，开始今晚",
+    title: "TapNight｜一碰入夜",
     applicationName: "TapNight",
-    description: "实时酒吧热力、NFC 到店打卡、AI 喝酒路线与每季酒单。",
+    description: "一碰入夜：NFC 到店打卡、实时酒吧热力、AI 喝酒路线与每季酒单。",
     manifest: "/manifest.webmanifest",
     icons: { icon: "/favicon.svg" },
     appleWebApp: {
@@ -20,16 +20,16 @@ export async function generateMetadata(): Promise<Metadata> {
       statusBarStyle: "black-translucent",
     },
     openGraph: {
-      title: "TapNight｜碰一下，开始今晚",
-      description: "记录你的喝酒路线，找到下一家刚刚好的酒吧。",
+      title: "TapNight｜一碰入夜",
+      description: "碰一下完成到店打卡，记录你的喝酒路线，找到下一家刚刚好的酒吧。",
       type: "website",
       locale: "zh_CN",
       images: [{ url: `${origin}/og.png`, width: 1200, height: 630, alt: "TapNight 城市喝酒路线" }],
     },
     twitter: {
       card: "summary_large_image",
-      title: "TapNight｜碰一下，开始今晚",
-      description: "记录你的喝酒路线，找到下一家刚刚好的酒吧。",
+      title: "TapNight｜一碰入夜",
+      description: "碰一下完成到店打卡，记录你的喝酒路线，找到下一家刚刚好的酒吧。",
       images: [`${origin}/og.png`],
     },
   };

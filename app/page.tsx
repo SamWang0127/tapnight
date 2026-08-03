@@ -200,6 +200,7 @@ export default function Home() {
   const [selectedBar, setSelectedBar] = useState(bars[0]);
   const [nfcOpen, setNfcOpen] = useState(false);
   const [nfcDone, setNfcDone] = useState(false);
+  const [nightStarted, setNightStarted] = useState(false);
   const [gpsStatus, setGpsStatus] = useState<GpsStatus>("idle");
   const [currentLocation, setCurrentLocation] = useState<GeoPoint | null>(null);
   const [geofenceOpen, setGeofenceOpen] = useState(false);
@@ -311,11 +312,8 @@ export default function Home() {
       return;
     }
     setNfcDone(true);
-    flash(`${selectedBar.name} · GPS 20 米内验证成功`);
-    window.setTimeout(() => {
-      setNfcOpen(false);
-      changeTab("menu");
-    }, 720);
+    setNightStarted(true);
+    flash(`${selectedBar.name} · 一碰入夜成功，路线开始记录`);
   };
 
   const handleLike = () => {
@@ -361,10 +359,13 @@ export default function Home() {
         <header className="topbar">
           <div>
             <p className="location-line"><span className="live-dot" />SHANGHAI · JING&apos;AN · {time}</p>
-            <h1>{detailPage ? "继续往里看。" : tab === "home" ? "晚上好，Sam。" : tab === "daily" ? "今天，先认识一杯。" : tab === "routes" ? "路线，是夜晚的手写体。" : tab === "menu" ? "从一杯开始认识它。" : tab === "community" ? "同一间店，也许见过。" : "你的喝酒档案。"}</h1>
+            <h1>{detailPage ? "继续往里看。" : tab === "home" ? "一碰入夜，Sam。" : tab === "daily" ? "今天，先认识一杯。" : tab === "routes" ? "路线，是夜晚的手写体。" : tab === "menu" ? "从一杯开始认识它。" : tab === "community" ? "同一间店，也许见过。" : "你的喝酒档案。"}</h1>
           </div>
           <div className="top-actions">
             <button className="status-pill" onClick={() => openDetail({ kind: "city" })}><span className="live-dot" /> 2,847 人正在喝</button>
+            <button className={`tap-entry-button ${nightStarted ? "active" : ""}`} onClick={openNfcWithGeofence} aria-label={nightStarted ? `今晚已在 ${selectedBar.name} 入夜，重新碰一下` : "一碰入夜"}>
+              <span aria-hidden="true">⌁</span><b>{nightStarted ? "已入夜" : "一碰入夜"}</b><small>{nightStarted ? `${selectedBar.name} · 第 1 站` : "NFC · 20m"}</small>
+            </button>
             <button className="icon-button" onClick={() => flash("今晚没有新提醒")} aria-label="查看通知">·</button>
           </div>
         </header>
@@ -432,24 +433,32 @@ export default function Home() {
             <button className="modal-close" aria-label="关闭" onClick={() => setNfcOpen(false)}>×</button>
             {!nfcDone ? (
               <>
-                <p className="eyebrow">NFC CHECK-IN</p>
-                <h2 id="nfc-title">碰一下，开始今晚。</h2>
-                <p className="modal-copy">GPS 已确认你在 {selectedBar.name} 20 米范围内。现在将手机靠近店内感应牌。</p>
+                <p className="eyebrow">TAP TO NIGHT · NFC READY</p>
+                <h2 id="nfc-title">一碰入夜。</h2>
+                <p className="modal-copy">GPS 已确认你在 {selectedBar.name} 20 米范围内。把手机靠近店内 TapNight 门贴，打卡、路线和本店酒单会同时开始。</p>
+                <div className="tap-ready-strip" aria-label="一碰入夜将自动完成三件事">
+                  <span><i>01</i>到店打卡</span><span><i>02</i>记录路线</span><span><i>03</i>打开酒单</span>
+                </div>
                 <button className="nfc-orb" onClick={handleNfc} aria-label="模拟 NFC 碰一下">
-                  <span>TapNight</span><small>靠近感应</small>
+                  <span>TapNight</span><small>手机靠近门贴</small>
                 </button>
                 <button className="primary-button full" onClick={handleNfc}>Developer · 模拟碰一下</button>
-                <p className="privacy-note">GPS 仅用于本次 20 米到店校验 · 不保存连续轨迹</p>
+                <p className="privacy-note">原生 App 可由 NFC 门贴直接唤起 · GPS 仅用于本次 20 米到店校验</p>
               </>
             ) : (
               <div className="checkin-success">
                 <div className="success-mark">✓</div>
-                <p className="eyebrow">CHECKED IN · 21:06</p>
-                <h2 id="nfc-title">{selectedBar.name}</h2>
-                <p className="modal-copy">{selectedBar.area} · 今晚第 1 站<br />实时客流 {selectedBar.crowd}% · {selectedBar.wait}</p>
+                <p className="eyebrow">NIGHT STARTED · {time}</p>
+                <h2 id="nfc-title">今晚开始了。</h2>
+                <p className="modal-copy">{selectedBar.name} · {selectedBar.area}<br />实时客流 {selectedBar.crowd}% · {selectedBar.wait}</p>
+                <div className="tap-success-grid">
+                  <span><i>✓</i><b>到店已验证</b><small>NFC + GPS 20m</small></span>
+                  <span><i>01</i><b>路线记录中</b><small>今晚第 1 站</small></span>
+                  <span><i>↗</i><b>酒单已切换</b><small>{selectedBar.name}</small></span>
+                </div>
                 <div className="success-route"><span>START</span><i /><b>01</b><i className="muted" /><span>NEXT</span></div>
                 <button className="primary-button full" onClick={() => { setNfcOpen(false); changeTab("menu"); }}>打开 {selectedBar.name} 酒单</button>
-                <button className="text-button" onClick={() => setNfcOpen(false)}>稍后再说</button>
+                <button className="text-button" onClick={() => { setNfcOpen(false); changeTab("routes"); }}>查看正在记录的路线 →</button>
               </div>
             )}
           </section>
@@ -461,7 +470,7 @@ export default function Home() {
           <section className="geofence-modal" role="dialog" aria-modal="true" aria-labelledby="geofence-title" onMouseDown={(event) => event.stopPropagation()}>
             <button className="modal-close" aria-label="关闭" onClick={() => setGeofenceOpen(false)}>×</button>
             <p className="eyebrow">GPS · 20 M GEOFENCE</p>
-            <h2 id="geofence-title">需要在店内才能打卡。</h2>
+            <h2 id="geofence-title">离店太远，还不能入夜。</h2>
             <div className={`geofence-radar ${geofenceDistance !== null && geofenceDistance <= 20 ? "inside" : ""}`}><i /><span>20m</span><b>你</b></div>
             <div className="geofence-reading">
               <span>目标门店</span><b>{selectedBar.name}</b>
@@ -715,7 +724,7 @@ function HomeView({ selectedBar, setSelectedBar, onNfc, gpsStatus, currentLocati
             <span>⌖</span><b>{gpsStatus === "locating" ? "定位中" : gpsStatus === "ready" ? "GPS 已定位" : gpsStatus === "denied" ? "定位未开启" : "开启 GPS"}</b>
             <small>{distanceToSelectedBar === null ? "20m 打卡校验" : `距店 ${distanceToSelectedBar.toLocaleString()}m`}</small>
           </button>
-          <button className="nfc-fab" onClick={onNfc}><span>⌁</span><b>碰一下打卡</b><small>无需打开 App</small></button>
+          <button className="nfc-fab" onClick={onNfc}><span>⌁</span><b>一碰入夜</b><small>NFC 直达 · 不用先打开</small></button>
           <article className="map-bar-card">
             <div className="map-card-main"><span className={`occupancy-dot ${selectedBar.tone}`} /><p>{selectedBar.area}</p><h3>{selectedBar.name}</h3><div className="inline-tags">{selectedDisplayTags.map((tag) => <span className={selectedConsensusTags.includes(tag) ? "consensus-auto" : ""} key={tag}>{tag}</span>)}</div><small className="tag-source-note">✓ {selectedConsensusTags.length} 个标签由 ≥{COMMUNITY_TAG_THRESHOLD} 人共识自动加入</small></div>
             <div className="bar-card-stat"><b>{selectedBar.crowd}%</b><span>{selectedBar.wait}</span><div className="bar-card-actions"><button onClick={() => onBarDetail(selectedBar.id)}>详情</button><button onClick={onRoutes}>＋路线</button></div></div>
